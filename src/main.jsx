@@ -5,11 +5,9 @@ import App from './App'
 
 ReactDOM.render(
   <React.StrictMode>
- 
+    <Router basename={process.env.PUBLIC_URL}>
       <App />
-  
+    </Router>
   </React.StrictMode>,
   document.getElementById('root')
 )
-
-// react dom render for github pages
