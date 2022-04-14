@@ -2,7 +2,6 @@
   "homepage": "https://www.spaik.es",
   "name": "spaik-website-react",
   "version": "0.1.0",
-  "private": false,
   "scripts": {
     "dev": "vite",
     "build": "vite build",
