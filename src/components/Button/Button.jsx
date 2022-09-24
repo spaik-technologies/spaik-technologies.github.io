@@ -30,6 +30,7 @@ Button.propTypes = {
   type: PropTypes.oneOf(Object.values(themes)),
   label: PropTypes.string,
   to: PropTypes.string,
+  // eslint-disable-next-line react/forbid-prop-types
   icon: PropTypes.objectOf(PropTypes.any),
   onClick: PropTypes.func,
 };

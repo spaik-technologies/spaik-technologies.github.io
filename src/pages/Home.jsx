@@ -16,32 +16,14 @@ export function Home() {
       <Header />
       <MainBlock />
       <Group oriented='horizontal' className='pages-list'>
-        <PageCard 
-          backgroundColor='var(--color-red)' 
-          title={"Anomaly detection"}
-          subtitle={'Understanding \n the Brain'} 
-          src={redBrain} 
-          linkLabel='' 
-          linkTo='/' />
-        <PageCard 
-          backgroundColor='var(--color-blue)' 
-          title={"Clinical analysis"}
-          subtitle={'Interfacing \n with the Brain'} 
-          src={blueBrain} 
-          linkLabel='' 
-          linkTo='/' />
-        <PageCard 
-          backgroundColor='var(--color-green)'
-          title={"Spiking Neural Graph"} 
-          subtitle={'Engineering \n with the Brain'} 
-          src={greenBrain} 
-          linkLabel='' 
-          linkTo='/' />
+        <PageCard backgroundColor='var(--color-red)' title='Anomaly detection' subtitle='Understanding \n the Brain' src={redBrain} linkLabel='' linkTo='/' />
+        <PageCard backgroundColor='var(--color-blue)' title='Clinical analysis' subtitle='Interfacing \n with the Brain' src={blueBrain} linkLabel='' linkTo='/' />
+        <PageCard backgroundColor='var(--color-green)' title='Spiking Neural Graph' subtitle='Engineering \n with the Brain' src={greenBrain} linkLabel='' linkTo='/' />
       </Group>
       <FutureBlock />
       <Footer />
     </>
   );
-};
+}
 
 export default Home;

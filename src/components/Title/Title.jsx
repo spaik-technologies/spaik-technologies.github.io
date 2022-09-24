@@ -10,6 +10,7 @@ export function Title({ type, text, titleStyle }) {
 Title.propTypes = {
   type: PropTypes.oneOf(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']).isRequired,
   text: PropTypes.string.isRequired,
+  // eslint-disable-next-line react/forbid-prop-types
   titleStyle: PropTypes.objectOf(PropTypes.object),
 };
 

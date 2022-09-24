@@ -35,6 +35,7 @@ export function PageCard({
 PageCard.propTypes = {
   backgroundColor: PropTypes.string,
   title: PropTypes.string.isRequired,
+  subtitle: PropTypes.string.isRequired,
   src: PropTypes.string.isRequired,
   linkLabel: PropTypes.string,
   linkTo: PropTypes.string,

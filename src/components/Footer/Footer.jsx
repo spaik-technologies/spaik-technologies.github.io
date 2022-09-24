@@ -24,6 +24,6 @@ export function Footer() {
       </Group>
     </footer>
   );
-};
+}
 
 export default Footer;
