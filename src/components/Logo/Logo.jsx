@@ -2,23 +2,25 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import './style.scss';
 import { Link } from 'react-router-dom';
-import ReactLogo from './horizontal_negro.svg';
 
-// eslint-disable-next-line no-unused-vars
-export function Logo({ color }) {
+export function Logo({ src, height, width }) {
   return (
     <Link className='logo' to='/'>
       <div className='logo__png'>
-        <img src={ReactLogo} alt='React Logo' height='120px' width='240px' />
+        <img src={src} alt='React Logo' height={height} width={width} />
       </div>
     </Link>
   );
 }
 
 Logo.propTypes = {
-  color: PropTypes.string,
+  src: PropTypes.string,
+  height: PropTypes.string,
+  width: PropTypes.string,
 };
 
 Logo.defaultProps = {
-  color: '#ffffff',
+  src: '',
+  height: '120px',
+  width: '240px',
 };

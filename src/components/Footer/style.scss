@@ -6,6 +6,7 @@
   background: var(--color-white);
   flex-direction: row;
   justify-content: space-around;
+  -webkit-align-items: center;
 
   & * {
     font-size: 0.875rem;
@@ -14,12 +15,6 @@
   .copyright, .link {
     color: var(--color-grey);
     margin: 0;
-  }
-
-  .link {
-    &:after {
-      background: var(--color-grey);
-    }
   }
 
   .outside-link {
@@ -31,7 +26,7 @@
   }
 
   .contact {
-    justify-content: space-between;
+    justify-content: space-evenly;
     width: 25%;
   }
 }

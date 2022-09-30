@@ -17,8 +17,10 @@ export function PageCard({
 
   return (
     <div className='page-card' style={{ backgroundColor }}>
-      <Title type='h4' text={title} />
-      <Title type='h3' text={subtitle} />
+      <Title type='h3' text={title} />
+      {subtitle && (
+        <Title type='h4' text={subtitle} />
+      )}
       <animated.img
         onMouseMove={({ clientX: x, clientY: y }) => set({ xys: calc(x, y) })}
         onMouseLeave={() => set({ xys: [0, 0, 1] })}

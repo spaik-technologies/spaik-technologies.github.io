@@ -12,6 +12,7 @@
 
     .link {
       position: relative;
+      color: #858686;
 
       &:after {
         content: '';
@@ -19,8 +20,6 @@
         top: 50%; right: -25px;
         width: 15px;
         height: 2px;
-        background: var(--color-white);
-        opacity: 0;
         transition: .25s;
       }
 

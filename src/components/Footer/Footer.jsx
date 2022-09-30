@@ -5,17 +5,16 @@ import { PageNavigation } from '../PageNavigation/PageNavigation';
 import { Contacts } from '../Contacts/Contacts';
 import { Input } from '../Input/Input';
 import { Group } from '../Group/Group';
+import iconLogo from '../../images/logo/icon.png';
 
 export function Footer() {
   return (
     <footer className='footer'>
-      <Logo color='var(--color-grey)' />
+      <Logo src={iconLogo} height='60px' width='60px' />
       <p className='copyright'>
-        © SPAIK 2022
+        © SPAIK TECHNOLOGIES, S.L
         <br />
-        Bringing predictive intelligence to healthcare
-        <br />
-        ALL RIGHTS RESERVED.
+        ALL RIGHTS RESERVED
       </p>
       <PageNavigation />
       <Group className='contact' oriented='vertical'>
