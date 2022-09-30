@@ -4,7 +4,6 @@ import {
   Route,
 } from 'react-router-dom';
 import React from 'react';
-// eslint-disable-next-line import/no-named-as-default
 import Home from './pages/Home';
 
 function App() {

@@ -1,9 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { useSpring, animated } from 'react-spring';
-import PropTypes from 'prop-types';
 import './style.scss';
 
-export function Input({ type }) {
+interface InputProps {
+  type: string;
+}
+
+const Input = ({ type }: InputProps) => {
   const [focus, setFocus] = useState(false);
   const text = useRef('');
 
@@ -12,13 +15,13 @@ export function Input({ type }) {
     fontSize: focus || text.current.length > 0 ? '0.8rem' : '1rem',
   });
 
-  const toggleFocus = (e) => {
+  const toggleFocus = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.type === 'blur') return setFocus(false);
 
     return setFocus(true);
   };
 
-  const inputHandler = (e) => {
+  const inputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     text.current = e.target.value;
   };
 
@@ -29,8 +32,6 @@ export function Input({ type }) {
       <input onInput={inputHandler} className='input' onFocus={toggleFocus} onBlur={toggleFocus} type={type} />
     </label>
   );
-}
-
-Input.propTypes = {
-  type: PropTypes.string.isRequired,
 };
+
+export default Input;

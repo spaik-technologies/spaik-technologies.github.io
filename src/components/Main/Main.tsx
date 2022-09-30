@@ -2,12 +2,12 @@ import React from 'react';
 import './style.scss';
 
 import { useSpring } from 'react-spring';
-import { Title } from '../Title/Title';
+import Title from '../Title';
 // import { Button } from '../Button/Button';
-import { Group } from '../Group/Group';
+import Group from '../Group';
 // import { ReactComponent as LinkSVG } from '../../images/linkSvg.svg';
 
-export function MainBlock() {
+const MainBlock = () => {
   const titleAnim = useSpring({
     opacity: 1,
     transform: 'translateX(0px)',
@@ -23,6 +23,6 @@ export function MainBlock() {
       </Group>
     </section>
   );
-}
+};
 
 export default MainBlock;

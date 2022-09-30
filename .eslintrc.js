@@ -23,5 +23,22 @@ module.exports = {
     'no-bitwise': ['error', { allow: ['^', '&', '>>'] }],
     'no-mixed-operators': 'off',
     'react/jsx-filename-extension': 'off',
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "jsx": "never",
+        "ts": "never",
+        "tsx": "never"
+      }
+   ]
+  },
+  settings: {
+    "import/resolver": {
+      node: {
+        extensions: [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
   },
 };
