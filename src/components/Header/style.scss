@@ -10,3 +10,21 @@
   width: 100%;
   z-index: 10;
 }
+
+.header_elems {
+  position: absolute;
+  text-align: center;
+  padding: 8px;
+}
+
+.header_elems_navigation {
+  position: absolute;
+  text-align: center;
+  padding: 8px;
+}
+
+@media screen and (max-width: 620px) {  
+  .header_elems_navigation {
+    display: none !important;
+  }
+}

@@ -1,4 +1,5 @@
 import React from 'react';
+// components
 import './style.scss';
 import MainBlock from '../../components/Main';
 import Header from '../../components/Header';
