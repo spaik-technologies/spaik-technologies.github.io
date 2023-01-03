@@ -7,11 +7,13 @@
   width: 100%;
   min-height: 50vh;
   padding: $container-padding-h;
-  background: $color-lavender url('../../images/homepage_background.png') no-repeat center/contain;
+  margin-top: 10%;
+  // background: $color-lavender url('../../images/homepage_background.png') no-repeat center/contain;
+  background: linear-gradient(268.36deg, rgba(72, 147, 158, 0) 1.39%, #48939E 73.17%, #48939E 99.15%);
 
   .title {
     justify-self: center;
-    padding-top: $container-padding-v * 5;
+    padding-top: $container-padding-v * 2;
   }
 
   .navigation {
@@ -20,6 +22,10 @@
 
   .logo {
     align-self: flex-start;
+  }
+
+  .main-icons-list {
+    padding: 8px;
   }
 
   &__more {
@@ -54,7 +60,7 @@
 
 @media screen and (max-width: 816px) {
   .main {
-    background-image: url('../../images/homepage-tablet.png');
+    // background-image: url('../../images/homepage-tablet.png');
     background-size: 280px;
 
     .title {
@@ -65,7 +71,7 @@
 
 @media screen and (max-width: 480px) {
   .main {
-    background-image: url('../../images/homepage-mobile.png');
+    // background-image: url('../../images/homepage-mobile.png');
     background-position: left 75%;
 
     .title {

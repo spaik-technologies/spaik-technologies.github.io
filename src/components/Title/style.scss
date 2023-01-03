@@ -8,12 +8,14 @@
 h1.title {
   font-size: $title-h1;
   letter-spacing: 0.1125rem;
-  color: #939494;
+  color: white;
 }
 
 h2.title {
   font-size: $title-h2;
-  font-weight: 400;
+  letter-spacing: 0.1125rem;
+  font-weight: 300;
+  color: white;
 }
 
 h3.title {
