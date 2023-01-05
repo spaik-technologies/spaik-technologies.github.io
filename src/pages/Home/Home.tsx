@@ -8,23 +8,14 @@ import Footer from '../../components/Footer';
 import IndexSection from '../../components/IndexSection';
 import ContentSectionBlock from '../../components/ContentSection';
 
-const Home = () => {  
-
-  return (
+const Home = () => (
   <>
     <Header />
     <MainBlock />
     <IndexSection />
     <ContentSectionBlock />
-    {/* <Group oriented='horizontal' className='pages-list'>
-      <PageCard backgroundColor='#48939e' title='Anomaly Detection' src={anomalyDetectionLogo} linkLabel='' linkTo='/' />
-      <PageCard backgroundColor='#74bfc8' title='Clinical Analysis' src={clinicalAnalysis} linkLabel='' linkTo='/' />
-      <PageCard backgroundColor='#d290a4' title='Spiking Neural Networks' src={spaikingNeuralNetworksLogo} linkLabel='' linkTo='/' />
-    </Group> */}   
     <Footer />
   </>
-  );
-
-};
+);
 
 export default Home;

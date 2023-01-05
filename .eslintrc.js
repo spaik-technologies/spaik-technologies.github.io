@@ -23,6 +23,7 @@ module.exports = {
     'no-bitwise': ['error', { allow: ['^', '&', '>>'] }],
     'no-mixed-operators': 'off',
     'react/jsx-filename-extension': 'off',
+    'linebreak-style': ['error', process.platform === 'win32' ? 'windows' : 'unix'],
     "import/extensions": [
       "error",
       "ignorePackages",

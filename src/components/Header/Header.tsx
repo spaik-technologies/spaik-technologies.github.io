@@ -3,21 +3,21 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Button, { ButtonProps } from '@mui/material/Button';
+import { styled } from '@mui/material/styles';
 // components
 import './style.scss';
 import Logo from '../Logo';
 import PageNavigation from '../PageNavigation';
 import logo from '../../images/logo/logo_02.svg';
-import { styled } from '@mui/material/styles';
 
-const ColorButton = styled(Button)<ButtonProps>(({ theme }) => ({
+const ColorButton = styled(Button)<ButtonProps>(() => ({
   color: 'white',
   backgroundColor: '#74BFC8',
 }));
 
 const Header = () => (
   <div id='header_main' className='header_main'>
-    <Box sx={{ flexGrow: 1 }} >
+    <Box sx={{ flexGrow: 1 }}>
       <Grid container spacing={2}>
         <Grid item xs={4} md={4} lg={4}>
           <div className='header_elems'>
@@ -31,7 +31,7 @@ const Header = () => (
         </Grid>
         <Grid item xs={2} md={2} lg={2}>
           <div className='header_elems_navigation'>
-            <ColorButton  variant="contained"> Contact us </ColorButton >
+            <ColorButton variant='contained'> Contact us </ColorButton>
           </div>
         </Grid>
       </Grid>
