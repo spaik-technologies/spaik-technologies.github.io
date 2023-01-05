@@ -6,9 +6,9 @@ import Grid from '@mui/material/Grid';
 import { useSpring } from 'react-spring';
 
 import Title from '../Title';
-import { ReactComponent as MainTubeSVG } from '../../icons/main_tube.svg';
+import { ReactComponent as MainDetectionSVG } from '../../icons/main_detection.svg';
 import { ReactComponent as MainAnalysisSVG } from '../../icons/main_analysis.svg';
-import { ReactComponent as MainWheelSVG } from '../../icons/main_wheel.svg';
+import { ReactComponent as MainSpikingSVG } from '../../icons/main_spiking.svg';
 const MainBlock = () => {
   const titleAnim = useSpring({
     opacity: 1,
@@ -23,13 +23,13 @@ const MainBlock = () => {
       <Box sx={{ flexGrow: 1, padding: '8px' }} >
         <Grid container spacing={2}>
           <Grid item xs={1} md={1} lg={1}>
-            <MainAnalysisSVG />
+            <MainDetectionSVG className='main-content-icon' />
           </Grid>
           <Grid item xs={1} md={1} lg={1}>
-            <MainTubeSVG />
+            <MainAnalysisSVG className='main-content-icon' />
           </Grid>
           <Grid item xs={1} md={1} lg={1}>
-            <MainWheelSVG />
+            <MainSpikingSVG className='main-content-icon' />
           </Grid>
         </Grid>
       </Box>

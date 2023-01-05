@@ -1,0 +1,44 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.index-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: $container-padding-h;
+  .index-page-section{
+    margin: auto;
+    width: 60%;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .index-page-icon-detection{
+    color: #48939E;
+  }
+
+  .index-page-icon-analysis{
+    color: #74BFC8;
+  }
+
+  .index-page-icon-data{
+    color: #48939E;
+  }
+
+  .index-page-icon-spiking{
+    color: #F1DDE3;
+  }
+}
+
+@media screen and (max-width: 1020px) {
+  
+}
+
+@media screen and (max-width: 816px) {
+
+}
+
+@media screen and (max-width: 480px) {
+
+}
