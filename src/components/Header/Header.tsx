@@ -7,7 +7,7 @@ import Button, { ButtonProps } from '@mui/material/Button';
 import './style.scss';
 import Logo from '../Logo';
 import PageNavigation from '../PageNavigation';
-import logo from '../../images/logo/logo_spaik_02.png';
+import logo from '../../images/logo/logo_02.svg';
 import { styled } from '@mui/material/styles';
 
 const ColorButton = styled(Button)<ButtonProps>(({ theme }) => ({
@@ -16,7 +16,7 @@ const ColorButton = styled(Button)<ButtonProps>(({ theme }) => ({
 }));
 
 const Header = () => (
-  <div className='header_main'>
+  <div id='header_main' className='header_main'>
     <Box sx={{ flexGrow: 1 }} >
       <Grid container spacing={2}>
         <Grid item xs={4} md={4} lg={4}>

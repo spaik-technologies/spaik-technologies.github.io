@@ -8,10 +8,12 @@ interface ContentElementProps {
     header: string;
     section: string;
     src: string;
+    id: string;
   }
 
 const ContentElementBlock = (
     {
+        id,
         backgroundColor,
         header,
         section,
@@ -25,7 +27,7 @@ const ContentElementBlock = (
 
   return (
     <section className='content-element'>
-        <div className='header'>
+        <div className='header' id={id}>
             {header}
         </div>
         <div className='content'>

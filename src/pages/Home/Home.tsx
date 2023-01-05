@@ -1,4 +1,5 @@
 import React from 'react';
+// imports
 // components
 import './style.scss';
 import MainBlock from '../../components/Main';
@@ -8,7 +9,7 @@ import IndexSection from '../../components/IndexSection';
 import ContentSectionBlock from '../../components/ContentSection';
 
 const Home = () => {  
-  
+
   return (
   <>
     <Header />
@@ -19,8 +20,7 @@ const Home = () => {
       <PageCard backgroundColor='#48939e' title='Anomaly Detection' src={anomalyDetectionLogo} linkLabel='' linkTo='/' />
       <PageCard backgroundColor='#74bfc8' title='Clinical Analysis' src={clinicalAnalysis} linkLabel='' linkTo='/' />
       <PageCard backgroundColor='#d290a4' title='Spiking Neural Networks' src={spaikingNeuralNetworksLogo} linkLabel='' linkTo='/' />
-    </Group> */}    
-    
+    </Group> */}   
     <Footer />
   </>
   );

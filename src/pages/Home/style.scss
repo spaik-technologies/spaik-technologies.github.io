@@ -1,12 +1,5 @@
 @import '../../styles/variables';
 
-.pages-list {
-  display: flex;
-
-  .page-card {
-    width: 33.3333%;
-  }
-}
 .spaik-info{
 
   .info-header{
@@ -19,24 +12,10 @@
 }
 
 @media screen and (max-width: 1020px) {
-  .pages-list {
-    .page-card {
-      width: 100%;
-    }
-  }
+ 
 }
 
 @media screen and (max-width: 460px) {
-  .pages-list {
-    .page-card {
-      overflow: hidden;
 
-      &__img {
-        position: absolute;
-        height: 50%;
-        right: 0;
-      }
-    }
-  }
 }
 

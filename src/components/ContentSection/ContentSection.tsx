@@ -12,10 +12,10 @@ const ContentSectionBlock = () => {
 
   return (
     <div>
-        <ContentElementBlock header='Anomaly Detection' section='Anomaly Detection section' src={anomalyDetectionImage} />
-        <ContentElementBlock header='Clinical Analysis' section='Clinical Analysis section' src={clinicalAnalysisImage} />
-        <ContentElementBlock header='Synthetic Data Creation' section='Synthetic Data Creation section' src={syntheticDataImage} />
-        <ContentElementBlock header='Spiking Neural Networks' section='Spiking Neural Networks section' src={spikingNetworksImage} />
+        <ContentElementBlock id="anomaly-detection-element" header='Anomaly Detection' section='Anomaly Detection section' src={anomalyDetectionImage} />
+        <ContentElementBlock id="clinical-analysis-element" header='Clinical Analysis' section='Clinical Analysis section' src={clinicalAnalysisImage} />
+        <ContentElementBlock id="synthetic-data-creation-element" header='Synthetic Data Creation' section='Synthetic Data Creation section' src={syntheticDataImage} />
+        <ContentElementBlock id="spiking-neural-networks-element" header='Spiking Neural Networks' section='Spiking Neural Networks section' src={spikingNetworksImage} />
     </div>
   );
 };
