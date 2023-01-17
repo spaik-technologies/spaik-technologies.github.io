@@ -5,7 +5,6 @@ import Grid from '@mui/material/Grid';
 // components
 import './style.scss';
 import Logo from '../Logo';
-import PageNavigation from '../PageNavigation';
 import Contacts from '../Contacts';
 import Input from '../Input';
 import Group from '../Group';
@@ -29,10 +28,7 @@ const Footer = () => (
         </div>
       </Grid>
       <Grid item xs={12} md={3} lg={3}>
-        <div className='footer_elems'><PageNavigation /></div>
-      </Grid>
-      <Grid item xs={12} md={3} lg={3}>
-        <div className='footer_elems'>
+        <div className='footer_elems' id='footer_contect'>
           <Group className='contact' oriented='vertical'>
             <Contacts />
             <Input type='text' />

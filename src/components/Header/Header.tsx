@@ -15,28 +15,36 @@ const ColorButton = styled(Button)<ButtonProps>(() => ({
   backgroundColor: '#74BFC8',
 }));
 
-const Header = () => (
-  <div id='header_main' className='header_main'>
-    <Box sx={{ flexGrow: 1 }}>
-      <Grid container spacing={2}>
-        <Grid item xs={4} md={4} lg={4}>
-          <div className='header_elems'>
-            <Logo src={logo} width='452px' />
-          </div>
+const Header = () => {
+  const onClickIcon = () => {
+    const id: string = 'footer_contect';
+    const access = document.getElementById(id);
+    if (access) access.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <div id='header_main' className='header_main'>
+      <Box sx={{ flexGrow: 1 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={4} md={5} lg={5}>
+            <div className='header_elems'>
+              <Logo src={logo} width='452px' />
+            </div>
+          </Grid>
+          <Grid item xs={4} md={4} lg={5}>
+            <div className='header_elems_navigation'>
+              <PageNavigation />
+            </div>
+          </Grid>
+          <Grid item xs={4} md={3} lg={2}>
+            <div className='header_elems_navigation'>
+              <ColorButton variant='contained' onClick={onClickIcon}> Contact us </ColorButton>
+            </div>
+          </Grid>
         </Grid>
-        <Grid item xs={6} md={6} lg={6}>
-          <div className='header_elems_navigation'>
-            <PageNavigation />
-          </div>
-        </Grid>
-        <Grid item xs={2} md={2} lg={2}>
-          <div className='header_elems_navigation'>
-            <ColorButton variant='contained'> Contact us </ColorButton>
-          </div>
-        </Grid>
-      </Grid>
-    </Box>
-  </div>
-);
+      </Box>
+    </div>
+  );
+};
 
 export default Header;

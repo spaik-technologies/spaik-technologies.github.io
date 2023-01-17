@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 // imports
 // components
 import './style.scss';
@@ -8,14 +8,22 @@ import Footer from '../../components/Footer';
 import IndexSection from '../../components/IndexSection';
 import ContentSectionBlock from '../../components/ContentSection';
 
-const Home = () => (
-  <>
-    <Header />
-    <MainBlock />
-    <IndexSection />
-    <ContentSectionBlock />
-    <Footer />
-  </>
-);
+const Home = () => {
+  useEffect(() => {
+    const id: string = 'header_main';
+    const access = document.getElementById(id);
+    if (access) access.scrollIntoView();
+  }, []);
+
+  return (
+    <>
+      <Header />
+      <MainBlock />
+      <IndexSection />
+      <ContentSectionBlock />
+      <Footer />
+    </>
+  );
+};
 
 export default Home;

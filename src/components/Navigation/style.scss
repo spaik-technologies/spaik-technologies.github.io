@@ -33,3 +33,19 @@
     }
   }
 }
+
+@media screen and (max-width: 816px) {    
+  .navigation {
+    &__link {
+      display: block;
+    }
+  }
+}
+
+@media screen and (max-width: 1020px) {    
+  .navigation {
+    &__link {
+      display: block;
+    }
+  }
+}

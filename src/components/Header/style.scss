@@ -3,6 +3,8 @@
 
 .header_main {
   background-color: white;
+  width: 100%;
+  height: 10%;
 }
 .header_elems {
   position: absolute;
@@ -20,5 +22,36 @@
 @media screen and (max-width: 620px) {  
   .header_elems_navigation {
     display: none !important;
+  }
+  
+  .header_elems img{
+    width: 90%;
+  }
+
+  .header_elems {
+    padding: 0px;
+    width: 100%;
+  }
+}
+
+@media screen and (max-width: 816px) {    
+  .header_elems img {
+    width: 80%;
+  }
+
+  .header_elems {
+    padding: 0px;
+    width: 30%;
+  }
+}
+
+@media screen and (max-width: 1020px) {    
+  .header_elems img {
+    width: 80%;
+  }
+
+  .header_elems {
+    padding: 0px;
+    width: 50%;
   }
 }

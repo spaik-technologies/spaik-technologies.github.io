@@ -55,7 +55,7 @@
 @media screen and (max-width: 1020px) {
   .main {
     background-position: 100% 90%;
-
+    margin-top: 17%;
     .title {
       margin-bottom: $container-padding-v * 4;
     }
@@ -64,8 +64,8 @@
 
 @media screen and (max-width: 816px) {
   .main {
-    // background-image: url('../../images/homepage-tablet.png');
-    background-size: 280px;
+    background-position: 100% 90%;
+    margin-top: 22%;
 
     .title {
       font-size: $title-h1 * .75;
@@ -75,8 +75,8 @@
 
 @media screen and (max-width: 480px) {
   .main {
-    // background-image: url('../../images/homepage-mobile.png');
     background-position: left 75%;
+    margin-top: 27%;
 
     .title {
       font-size: $title-h1 / (.75 * 2.25);
