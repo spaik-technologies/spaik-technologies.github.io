@@ -12,22 +12,22 @@ import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 
 export default function Model(props) {
-  const { nodes } = useGLTF('/mri_brain_tumor-transformed.glb')
-  
+  const { nodes } = useGLTF('/3d/mri-brain-tumor-transformed.glb')
+
   const redMaterial = new THREE.MeshBasicMaterial({ color: 'red' })
   const greenMaterial = new THREE.MeshBasicMaterial({ color: 'green' })
   const blueMaterial = new THREE.MeshBasicMaterial({ color: '#4A4A4A', transparent: true, opacity: 0.7 })
-  
+
   return (
-    <group scale={[0.035,0.035,0.035]} {...props} dispose={null}>
+    <group scale={[0.035, 0.035, 0.035]} {...props} dispose={null}>
       <group position={[0, 10.68, -1.89]} rotation={[-Math.PI, 0, 0]}>
         <mesh geometry={nodes.Object_2.geometry} material={redMaterial} />
         <mesh geometry={nodes.Object_3.geometry} material={greenMaterial} />
-        <mesh geometry={nodes.Object_4.geometry} material={blueMaterial} castShadow receiveShadow/>
+        <mesh geometry={nodes.Object_4.geometry} material={blueMaterial} castShadow receiveShadow />
         <mesh geometry={nodes.Object_5.geometry} material={blueMaterial} />
       </group>
     </group>
   )
 }
 
-useGLTF.preload('/mri_brain_tumor-transformed.glb')
+useGLTF.preload('/3d/mri-brain-tumor-transformed.glb')

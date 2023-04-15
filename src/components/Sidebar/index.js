@@ -35,7 +35,7 @@ const Sidebar = ({ isOpen, toggle }) => {
                         exact='true'
                         offset={-80}
                         onClick={toggle}
-                        >Clinical Analysis</SidebarLink>
+                        >Clinical analysis</SidebarLink>
                     <SidebarLink 
                         to='synthetic-data'
                         smooth={true}
@@ -44,7 +44,7 @@ const Sidebar = ({ isOpen, toggle }) => {
                         exact='true'
                         offset={-80}
                         onClick={toggle}
-                    >Synthetic Data Generation</SidebarLink>
+                    >Synthetic data generation</SidebarLink>
                     <SidebarLink 
                         to='spiking-networks'
                         smooth={true}
@@ -53,7 +53,7 @@ const Sidebar = ({ isOpen, toggle }) => {
                         exact='true'
                         offset={-80}
                         onClick={toggle}
-                    >Spiking Neural Networks</SidebarLink>
+                    >Spiking neural networks</SidebarLink>
                 </SidebarMenu>
                 <SideBtnWrap>
                 <ButtonS 

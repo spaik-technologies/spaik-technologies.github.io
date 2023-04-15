@@ -64,7 +64,7 @@ const Navbar = ({ toggle }) => {
               spy={true}
               exact='true'
               offset={-80}
-            >Clinical Analysis</NavLinks>
+            >Clinical analysis</NavLinks>
           </NavItem>
           <NavItem>
             <NavLinks 
@@ -74,7 +74,7 @@ const Navbar = ({ toggle }) => {
               spy={true}
               exact='true'
               offset={-80}
-            >Synthetic Data Creation</NavLinks>
+            >Synthetic data creation</NavLinks>
           </NavItem>
           <NavItem>
             <NavLinks 
@@ -84,7 +84,7 @@ const Navbar = ({ toggle }) => {
               spy={true}
               exact='true'
               offset={-80}
-            >Spiking Neural Networks</NavLinks>
+            >Spiking neural networks</NavLinks>
           </NavItem>
         </NavMenu>
         <NavBtn>

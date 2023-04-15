@@ -1,5 +1,16 @@
 import styled from 'styled-components';
 
+
+export const Overlay = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-color: transparent;
+  z-index: 999;
+`;
+
 export const InfoContainer = styled.div`
     color: #fff;
     background: ${({lightBg}) => (lightBg ? '#f9f9f9' : '#010606')};
@@ -19,6 +30,12 @@ export const InfoWrapper = styled.div`
     margin-left: auto;
     padding: 0 24px;
     justify-content: center;
+
+    // @media screen and (max-width: 767px) {
+    //     padding: 100px 24px 0;
+    //     height: auto;
+    //     max-height: 100vh;
+    // }
 `
 
 export const InfoRow = styled.div`
@@ -95,3 +112,30 @@ export const Img = styled.img`
     margin: 0 0 10px 0;
     padding-right: 0;
 `
+
+export const Img3DWrap = styled.div`
+    height: 300px;
+    width: 100%;
+    // center the canvas
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    // @media screen and (max-width: 767px) {
+    //     padding: 300px 24px 0;
+    // }
+    
+`
+
+export const Img3D = styled.img`
+    width: 100%;
+    margin: 0 0 10px 0;
+    padding-right: 0;
+`
+
+export const MRIBrainWrap = styled.img`
+    width: 100%;
+    margin: 0 0 10px 0;
+    padding-right: 0;
+`
+
