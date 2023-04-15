@@ -13,6 +13,17 @@ import { FaBars } from "react-icons/fa";
 import spaikLogo from "../../images/logo_spaik_02.png";
 import { ButtonS } from "../ButtonElement";
 
+const NavLinksWithScroll = (props) => (
+  <NavLinks
+    {...props}
+    smooth={true}
+    duration={500}
+    spy={true}
+    exact="true"
+    offset={-80}
+  />
+);
+
 const Navbar = ({ toggle }) => {
   const [scrollNav, setScrollNav] = React.useState(false);
 
@@ -50,52 +61,24 @@ const Navbar = ({ toggle }) => {
         </NavbarContainer>
         <NavMenu>
           <NavItem>
-            <NavLinks
-              to="anomaly-detection"
-              smooth={true}
-              duration={500}
-              spy={true}
-              exact="true"
-              offset={-80}
-            >
+            <NavLinksWithScroll to="anomaly-detection">
               Anomaly detection
-            </NavLinks>
+            </NavLinksWithScroll>
           </NavItem>
           <NavItem>
-            <NavLinks
-              to="clinical-analysis"
-              smooth={true}
-              duration={500}
-              spy={true}
-              exact="true"
-              offset={-80}
-            >
+            <NavLinksWithScroll to="clinical-analysis">
               Clinical analysis
-            </NavLinks>
+            </NavLinksWithScroll>
           </NavItem>
           <NavItem>
-            <NavLinks
-              to="synthetic-data"
-              smooth={true}
-              duration={500}
-              spy={true}
-              exact="true"
-              offset={-80}
-            >
+            <NavLinksWithScroll to="synthetic-data">
               Synthetic data creation
-            </NavLinks>
+            </NavLinksWithScroll>
           </NavItem>
           <NavItem>
-            <NavLinks
-              to="spiking-networks"
-              smooth={true}
-              duration={500}
-              spy={true}
-              exact="true"
-              offset={-80}
-            >
+            <NavLinksWithScroll to="spiking-networks">
               Spiking neural networks
-            </NavLinks>
+            </NavLinksWithScroll>
           </NavItem>
         </NavMenu>
         <NavBtn>

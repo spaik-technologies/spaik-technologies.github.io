@@ -11,6 +11,17 @@ import {
 
 import { ButtonS } from "../ButtonElement";
 
+const SidebarLinkWithScroll = (props) => (
+  <SidebarLink
+    {...props}
+    smooth={true}
+    duration={500}
+    spy={true}
+    exact="true"
+    offset={-80}
+  />
+);
+
 const Sidebar = ({ isOpen, toggle }) => {
   return (
     <SidebarContainer isOpen={isOpen} onClick={toggle}>
@@ -19,50 +30,18 @@ const Sidebar = ({ isOpen, toggle }) => {
       </Icon>
       <SidebarWrapper>
         <SidebarMenu>
-          <SidebarLink
-            to="anomaly-detection"
-            smooth={true}
-            duration={500}
-            spy={true}
-            exact="true"
-            offset={-80}
-            onClick={toggle}
-          >
+          <SidebarLinkWithScroll to="anomaly-detection" onClick={toggle}>
             Anomaly detection
-          </SidebarLink>
-          <SidebarLink
-            to="clinical-analysis"
-            smooth={true}
-            duration={500}
-            spy={true}
-            exact="true"
-            offset={-80}
-            onClick={toggle}
-          >
+          </SidebarLinkWithScroll>
+          <SidebarLinkWithScroll to="clinical-analysis" onClick={toggle}>
             Clinical analysis
-          </SidebarLink>
-          <SidebarLink
-            to="synthetic-data"
-            smooth={true}
-            duration={500}
-            spy={true}
-            exact="true"
-            offset={-80}
-            onClick={toggle}
-          >
+          </SidebarLinkWithScroll>
+          <SidebarLinkWithScroll to="synthetic-data" onClick={toggle}>
             Synthetic data generation
-          </SidebarLink>
-          <SidebarLink
-            to="spiking-networks"
-            smooth={true}
-            duration={500}
-            spy={true}
-            exact="true"
-            offset={-80}
-            onClick={toggle}
-          >
+          </SidebarLinkWithScroll>
+          <SidebarLinkWithScroll to="spiking-networks" onClick={toggle}>
             Spiking neural networks
-          </SidebarLink>
+          </SidebarLinkWithScroll>
         </SidebarMenu>
         <SideBtnWrap>
           <ButtonS
