@@ -1,5 +1,5 @@
-import React from 'react'
-import { 
+import React from "react";
+import {
   Nav,
   NavbarContainer,
   MobileIcon,
@@ -7,32 +7,30 @@ import {
   NavItem,
   NavLinks,
   NavBtn,
-  NavLogoImg
- } from './NavbarElements'
-import { FaBars } from 'react-icons/fa'
-import spaikLogo from '../../images/logo_spaik_02.png'
-import { ButtonS } from '../ButtonElement'
+  NavLogoImg,
+} from "./NavbarElements";
+import { FaBars } from "react-icons/fa";
+import spaikLogo from "../../images/logo_spaik_02.png";
+import { ButtonS } from "../ButtonElement";
 
 const Navbar = ({ toggle }) => {
-
-  const [scrollNav, setScrollNav] = React.useState(false)
+  const [scrollNav, setScrollNav] = React.useState(false);
 
   const changeNav = () => {
     if (window.scrollY >= 80) {
-      setScrollNav(true)
+      setScrollNav(true);
     } else {
-      setScrollNav(false)
+      setScrollNav(false);
     }
-  }
+  };
 
   React.useEffect(() => {
-    window.addEventListener('scroll', changeNav)
-  }, [])
+    window.addEventListener("scroll", changeNav);
+  }, []);
 
   const toggleHome = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <>
@@ -40,67 +38,82 @@ const Navbar = ({ toggle }) => {
       <Nav scrollNav={scrollNav}>
         <NavbarContainer>
           {/* <NavLogo to="/" onClick={toggleHome}>Spaik</NavLogo> */}
-          <NavLogoImg onClick={toggleHome} src={spaikLogo} alt="Spaik Logo" scrollNav={scrollNav}/>
+          <NavLogoImg
+            onClick={toggleHome}
+            src={spaikLogo}
+            alt="Spaik Logo"
+            scrollNav={scrollNav}
+          />
           <MobileIcon onClick={toggle}>
             <FaBars />
           </MobileIcon>
         </NavbarContainer>
         <NavMenu>
           <NavItem>
-            <NavLinks 
-              to='anomaly-detection'
+            <NavLinks
+              to="anomaly-detection"
               smooth={true}
               duration={500}
               spy={true}
-              exact='true'
+              exact="true"
               offset={-80}
-            >Anomaly detection</NavLinks>
+            >
+              Anomaly detection
+            </NavLinks>
           </NavItem>
           <NavItem>
-            <NavLinks 
-              to='clinical-analysis'
+            <NavLinks
+              to="clinical-analysis"
               smooth={true}
               duration={500}
               spy={true}
-              exact='true'
+              exact="true"
               offset={-80}
-            >Clinical analysis</NavLinks>
+            >
+              Clinical analysis
+            </NavLinks>
           </NavItem>
           <NavItem>
-            <NavLinks 
-              to='synthetic-data'
+            <NavLinks
+              to="synthetic-data"
               smooth={true}
               duration={500}
               spy={true}
-              exact='true'
+              exact="true"
               offset={-80}
-            >Synthetic data creation</NavLinks>
+            >
+              Synthetic data creation
+            </NavLinks>
           </NavItem>
           <NavItem>
-            <NavLinks 
-              to='spiking-networks'
+            <NavLinks
+              to="spiking-networks"
               smooth={true}
               duration={500}
               spy={true}
-              exact='true'
+              exact="true"
               offset={-80}
-            >Spiking neural networks</NavLinks>
+            >
+              Spiking neural networks
+            </NavLinks>
           </NavItem>
         </NavMenu>
         <NavBtn>
-          <ButtonS 
+          <ButtonS
             to="footer"
             smooth={true}
             duration={500}
             spy={true}
-            exact='true'
+            exact="true"
             offset={-80}
-          >Contact us</ButtonS>
+          >
+            Contact us
+          </ButtonS>
         </NavBtn>
       </Nav>
       {/* </IconContext> */}
     </>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;
