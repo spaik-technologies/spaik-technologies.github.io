@@ -10,7 +10,7 @@ import {
   NavLogoImg,
 } from "./NavbarElements";
 import { FaBars } from "react-icons/fa";
-import spaikLogo from "../../images/logo_spaik_02.png";
+import spaikLogo from "../../images/logo-spaik-green-black.svg";
 import { ButtonS } from "../ButtonElement";
 
 const NavLinksWithScroll = (props) => (

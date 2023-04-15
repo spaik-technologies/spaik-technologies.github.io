@@ -49,7 +49,7 @@ export const NavLogoImg = styled.img`
   max-width: 100%;
   height: auto;
   width: auto;
-  max-height: 80%;
+  max-height: 70%;
   z-index: -1;
   align-self: center;
   color: #fff;
