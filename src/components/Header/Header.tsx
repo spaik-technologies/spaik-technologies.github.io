@@ -1,4 +1,3 @@
-import React from 'react';
 // imports
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -7,8 +6,16 @@ import { styled } from '@mui/material/styles';
 // components
 import './style.scss';
 import Logo from '../Logo';
-import PageNavigation from '../PageNavigation';
+// import PageNavigation from '../PageNavigation';
 import logo from '../../images/logo/logo_02.svg';
+import MainBlock from '../../components/Main';
+import IndexSection from '../../components/IndexSection';
+
+
+// const Section = styled_comp.div`
+//   height: 100vh;
+//   scroll-snap-align: center;
+// `
 
 const ColorButton = styled(Button)<ButtonProps>(() => ({
   color: 'white',
@@ -23,27 +30,29 @@ const Header = () => {
   };
 
   return (
-    <div id='header_main' className='header_main'>
-      <Box sx={{ flexGrow: 1 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={4} md={5} lg={5}>
-            <div className='header_elems'>
-              <Logo src={logo} width='452px' />
-            </div>
-          </Grid>
-          <Grid item xs={4} md={4} lg={5}>
-            <div className='header_elems_navigation'>
+    <>
+      <div id='header_main' className='header_main'>
+        <Box sx={{ flexGrow: 1 }}>
+          <Grid container spacing={2}>
+            <Grid item xs={4} md={5} lg={5}>
+              <div className='header_elems'>
+                <Logo src={logo} width='452px' />
+              </div>
+            </Grid>
+            <Grid item xs={4} md={4} lg={5}>
+              {/* <div className='header_elems_navigation'>
               <PageNavigation />
-            </div>
+            </div> */}
+            </Grid>
+            <Grid item xs={4} md={3} lg={2}>
+              <div className='header_elems_navigation'>
+                <ColorButton variant='contained' onClick={onClickIcon}> Contact us </ColorButton>
+              </div>
+            </Grid>
           </Grid>
-          <Grid item xs={4} md={3} lg={2}>
-            <div className='header_elems_navigation'>
-              <ColorButton variant='contained' onClick={onClickIcon}> Contact us </ColorButton>
-            </div>
-          </Grid>
-        </Grid>
-      </Box>
-    </div>
+        </Box>
+      </div>
+    </>
   );
 };
 

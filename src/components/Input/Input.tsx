@@ -26,7 +26,6 @@ const Input = ({ type }: InputProps) => {
   };
 
   return (
-    // eslint-disable-next-line jsx-a11y/label-has-associated-control
     <label className='label'>
       <animated.span className='placeholder' style={animPlaceholder}>SEND AN EMAIL</animated.span>
       <input onInput={inputHandler} className='input' onFocus={toggleFocus} onBlur={toggleFocus} type={type} />

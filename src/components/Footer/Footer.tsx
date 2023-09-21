@@ -10,6 +10,14 @@ import Input from '../Input';
 import Group from '../Group';
 import iconLogo from '../../images/logo/icon.png';
 
+import styled_comp from 'styled-components';
+
+
+const Section = styled_comp.div`
+  height: 100vh;
+  scroll-snap-align: center;
+`
+
 const Footer = () => (
   <Box sx={{ flexGrow: 1 }}>
     <Grid container spacing={2}>

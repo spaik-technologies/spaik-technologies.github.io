@@ -2,11 +2,21 @@ import React, { useEffect } from 'react';
 // imports
 // components
 import './style.scss';
-import MainBlock from '../../components/Main';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import IndexSection from '../../components/IndexSection';
+import MainBlock from '../../components/Main';
 import ContentSectionBlock from '../../components/ContentSection';
+import styled from 'styled-components';
+
+
+
+const Container = styled.div`
+  height: 100vh;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  overflow-y: auto;
+`;
 
 const Home = () => {
   useEffect(() => {
@@ -16,13 +26,12 @@ const Home = () => {
   }, []);
 
   return (
-    <>
-      <Header />
+    <Container>
+      {/* <Header /> */}
       <MainBlock />
-      <IndexSection />
       <ContentSectionBlock />
       <Footer />
-    </>
+    </Container>
   );
 };
 

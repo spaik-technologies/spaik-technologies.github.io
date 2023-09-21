@@ -1,4 +1,3 @@
-import React from 'react';
 import './style.scss';
 // import { Title } from '../Title/Title';
 // import { Button } from '../Button/Button';
