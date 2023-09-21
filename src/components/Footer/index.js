@@ -8,7 +8,7 @@ const Footer = ({ id }) => {
     <FooterContainer id={id}>
       <FooterWrap>
         <FooterLinkTitle>Contact us</FooterLinkTitle>
-        <b><MDBIcon color="black" icon="envelope"/> spaik.technologies@gmail.com</b>
+        <b><MDBIcon color="black" icon="envelope"/> administration@spaik.es</b>
         <p>&nbsp;</p>
         <p>© Spaik Technologies S.L.</p>
         <p>All Rights Reserved</p>
