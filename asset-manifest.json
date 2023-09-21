@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.9382265b.css",
-    "main.js": "/static/js/main.5f4a501b.js",
+    "main.js": "/static/js/main.9695eca2.js",
     "static/media/fa-solid-900.svg": "/static/media/fa-solid-900.7a8b4f130182d19a2d7c.svg",
     "static/media/fa-brands-400.svg": "/static/media/fa-brands-400.2f517e09eb2ca6650ff5.svg",
     "static/media/main-background.jpg": "/static/media/main-background.cc481eb28b6c0e1af5df.jpg",
@@ -24,10 +24,10 @@
     "static/media/logo-spaik-green-black.svg": "/static/media/logo-spaik-green-black.67f9a9337bd5b89586d840a04c2690e7.svg",
     "index.html": "/index.html",
     "main.9382265b.css.map": "/static/css/main.9382265b.css.map",
-    "main.5f4a501b.js.map": "/static/js/main.5f4a501b.js.map"
+    "main.9695eca2.js.map": "/static/js/main.9695eca2.js.map"
   },
   "entrypoints": [
     "static/css/main.9382265b.css",
-    "static/js/main.5f4a501b.js"
+    "static/js/main.9695eca2.js"
   ]
 }
