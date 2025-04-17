@@ -157,3 +157,59 @@ export const NavBtnS = styled(LinkS)`
     transition: 0.2s ease-in-out;
   }
 `;
+
+// New dropdown menu components
+export const DropdownContainer = styled.div`
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+`;
+
+export const DropdownButton = styled.div`
+  color: #000;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  padding: 0 1rem;
+  height: 100%;
+  cursor: pointer;
+
+  &:hover + ul {
+    display: block;
+  }
+`;
+
+export const DropdownMenu = styled.ul`
+  display: none;
+  position: absolute;
+  top: 80px;
+  left: 0;
+  background-color: #fff;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  &:hover {
+    display: block;
+  }
+`;
+
+export const DropdownItem = styled.li`
+  padding: 0;
+  margin: 0;
+`;
+
+export const DropdownLink = styled(LinkR)`
+  color: #000;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+
+  &:hover {
+    background-color: #f1f1f1;
+  }
+`;

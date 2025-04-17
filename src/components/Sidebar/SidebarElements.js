@@ -81,7 +81,7 @@ export const SideBtnWrap = styled.div`
 
 export const SidebarRoute = styled(LinkR)`
   border-radius: 50px;
-  background: #e31837;
+  background: #01bf71;
   white-space: nowrap;
   padding: 16px 64px;
   color: #010606;
@@ -116,5 +116,33 @@ export const SidebarScroll = styled(LinkS)`
     transition: all 0.2s ease-in-out;
     background: #fff;
     color: #010606;
+  }
+`;
+
+// New dropdown menu components for sidebar
+export const SidebarSubMenu = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-left: 1rem;
+  margin-top: 0.5rem;
+  width: 80%;
+`;
+
+export const SidebarSubLink = styled(LinkR)`
+  color: #fff;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  padding: 0.5rem;
+  height: 100%;
+  width: 100%;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+
+  &:hover {
+    color: #01bf71;
+    transition: 0.2s ease-in-out;
   }
 `;

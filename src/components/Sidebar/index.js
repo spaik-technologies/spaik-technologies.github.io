@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   SidebarContainer,
   Icon,
@@ -7,6 +7,8 @@ import {
   SidebarMenu,
   SidebarLink,
   SideBtnWrap,
+  SidebarSubMenu,
+  SidebarSubLink
 } from "./SidebarElements";
 
 import { ButtonS } from "../ButtonElement";
@@ -23,6 +25,13 @@ const SidebarLinkWithScroll = (props) => (
 );
 
 const Sidebar = ({ isOpen, toggle }) => {
+  const [showPagesSubmenu, setShowPagesSubmenu] = useState(false);
+
+  const togglePagesSubmenu = (e) => {
+    e.stopPropagation();
+    setShowPagesSubmenu(!showPagesSubmenu);
+  };
+
   return (
     <SidebarContainer isOpen={isOpen} onClick={toggle}>
       <Icon onClick={toggle}>
@@ -30,6 +39,15 @@ const Sidebar = ({ isOpen, toggle }) => {
       </Icon>
       <SidebarWrapper>
         <SidebarMenu>
+          <SidebarLink onClick={togglePagesSubmenu}>
+            Apps
+          </SidebarLink>
+          {showPagesSubmenu && (
+            <SidebarSubMenu>
+              <SidebarSubLink to="/page1" onClick={toggle}>Western-Blot App</SidebarSubLink>
+              <SidebarSubLink to="/page2" onClick={toggle}>Page 2</SidebarSubLink>
+            </SidebarSubMenu>
+          )}
           <SidebarLinkWithScroll to="anomaly-detection" onClick={toggle}>
             Anomaly detection
           </SidebarLinkWithScroll>

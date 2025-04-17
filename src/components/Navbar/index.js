@@ -8,6 +8,11 @@ import {
   NavLinks,
   NavBtn,
   NavLogoImg,
+  DropdownContainer,
+  DropdownButton,
+  DropdownMenu,
+  DropdownItem,
+  DropdownLink
 } from "./NavbarElements";
 import { FaBars } from "react-icons/fa";
 import spaikLogo from "../../images/logo-spaik-green-black.svg";
@@ -60,6 +65,19 @@ const Navbar = ({ toggle }) => {
           </MobileIcon>
         </NavbarContainer>
         <NavMenu>
+          <NavItem>
+            <DropdownContainer>
+              <DropdownButton>Apps</DropdownButton>
+              <DropdownMenu>
+                <DropdownItem>
+                  <DropdownLink to="/western-blot">Western-Blot App</DropdownLink>
+                </DropdownItem>
+                <DropdownItem>
+                  <DropdownLink to="/page2">Page 2</DropdownLink>
+                </DropdownItem>
+              </DropdownMenu>
+            </DropdownContainer>
+          </NavItem>
           <NavItem>
             <NavLinksWithScroll to="anomaly-detection">
               Anomaly detection
