@@ -1,0 +1,1940 @@
+<!--
+Application: Spaik Western Blot Analyzer
+Version: 1.0.0
+Date: 2023-12-08 (Update with current date)
+
+Libraries Used:
+- Tailwind CSS v3 (https://tailwindcss.com/)
+  License: MIT License (https://opensource.org/licenses/MIT)
+- tiff.js (https://github.com/seikichi/tiff.js)
+  License: MIT License (https://github.com/seikichi/tiff.js/blob/master/LICENSE)
+- ONNX Runtime Web (https://onnxruntime.ai/docs/api/js/)
+  License: MIT License (https://github.com/microsoft/onnxruntime/blob/main/LICENSE)
+- Chart.js (https://www.chartjs.org/)
+  License: MIT License (https://github.com/chartjs/Chart.js/blob/master/LICENSE.md)
+- SheetJS (xlsx.full.min.js) v0.20.3 (https://sheetjs.com/)
+  License: Apache 2.0 (https://github.com/SheetJS/sheetjs/blob/master/LICENSE)
+
+Developer: Jose C (Modify as needed)
+
+This is a single-file HTML/JS application for Western Blot image analysis.
+All JavaScript and CSS are inlined or linked via CDN.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced TIF Analyzer</title>
+    <script src="https://cdn.jsdelivr.net/npm/tiff.js/tiff.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <!-- MODIFIED HEADER -->
+    <div class="bg-white text-gray-800 p-4 shadow-sm border-b border-gray-200 flex items-center gap-4">
+        <img src="https://www.spaik.es/static/media/logo-spaik-green-black.67f9a9337bd5b89586d840a04c2690e7.svg" alt="Spaik Logo" class="h-10">
+        <h1 class="text-2xl font-bold">Western Blot Analyzer</h1>
+    </div>
+    <!-- END MODIFIED HEADER -->
+
+    <!-- MODIFIED: Added pb-14 for status bar height -->
+    <div class="flex flex-col p-5 gap-5 min-h-screen pb-14">
+
+        <!-- Row 1 -->
+        <div class="flex gap-5">
+            <!-- Left part of Row 1 -->
+        <div class="w-96 flex-shrink-0 flex flex-col gap-5">
+            <div id="loadDataSection" class="bg-white p-4 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-3 pb-2 border-b border-gray-200">1. Load Data</h2>
+                    <label for="tifFileInput" class="block text-sm font-medium text-gray-700 mb-1">TIFF Image Folder:</label>
+                    <div class="flex items-center gap-4 mb-3">
+                        <!-- Visually hidden file input -->
+                        <input type="file" id="tifFileInput" webkitdirectory directory accept=".tif,.tiff" class="hidden">
+                        <!-- Custom button -->
+                        <button type="button" id="customTifFolderButton" class="py-2 px-4 w-32 rounded-md border-0 text-sm font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer">Choose folder</button>
+                        <span id="tifFileCount" class="text-sm text-gray-600 whitespace-nowrap">No folder chosen</span>
+                </div>
+                <label for="onnxModelInput" class="block text-sm font-medium text-gray-700 mb-1">ONNX Model File (.onnx):</label>
+                     <div class="flex items-center gap-4 mb-3">
+                        <input type="file" id="onnxModelInput" accept=".onnx" class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:w-32 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer">
+                    <span id="onnxFileName" class="text-sm text-gray-600 whitespace-nowrap"></span>
+                </div>
+                <button id="loadDataButton" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:shadow-md transition duration-150 ease-in-out">Load Data & Model</button>
+            </div>
+            <div id="exposurePreviewSection" class="bg-white p-4 rounded-lg shadow-md flex-grow flex flex-col" style="display:none;"> 
+                <h2 class="text-xl font-semibold mb-3 pb-2 border-b border-gray-200">2. Exposure Preview</h2>
+                <div class="flex-grow"> 
+                    <div class="mb-2">
+                        <label for="exposureSlider" id="exposureInfo" class="block text-sm font-medium text-gray-700 mb-1">Exposure Index: 0 (Time: 0s)</label> 
+                    </div>
+                    <input type="range" id="exposureSlider" min="0" max="0" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                </div>
+                <div id="currentFileNameDisplay" class="text-xs text-gray-500 mt-1">File: <span id="currentFileName">No file selected</span></div>
+            </div>
+            </div>
+            <!-- Right part of Row 1 -->
+            <div class="flex-1 flex flex-col gap-5">
+                <div id="imagePreviewDisplay" class="bg-white p-4 rounded-lg shadow-md" style="display:none;">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-lg font-semibold">Time Series Image Preview</h3>
+                        <span id="imageExposureInfo" class="text-sm text-gray-600">Exposure Time: 0.0 seconds</span>
+                    </div>
+                    <div class="flex items-center justify-center min-h-[300px] bg-gray-50 rounded border border-gray-200 p-1">
+                         <canvas id="timeSeriesCanvas" class="max-w-full max-h-full object-contain"></canvas> <!-- Renamed from mainImageCanvas -->
+                    </div>
+                    <!-- Controls for the time series view (e.g., exposure slider info) remain, but click/fine-tune controls might move or be duplicated -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="flex gap-5">
+            <!-- Left part of Row 2 -->
+            <div class="w-96 flex-shrink-0 flex flex-col gap-5">
+            <div id="backgroundCorrectionSection" class="bg-white p-4 rounded-lg shadow-md flex-grow flex flex-col" style="display:none;"> 
+                <div class="flex-grow"> 
+                    <h2 class="text-xl font-semibold mb-3 pb-2 border-b border-gray-200">3. Background Correction</h2>
+                    <p class="text-sm text-gray-600 mb-3">Adjust the threshold to identify background pixels in the images. Higher values include more pixels as background. Click Apply when satisfied.</p>
+                    <div class="flex items-center mb-3">
+                        <label for="noiseThresholdSlider" class="text-sm font-medium text-gray-700 mr-2 whitespace-nowrap">Background Threshold:</label>
+                        <input type="range" id="noiseThresholdSlider" min="0.001" max="0.05" step="0.001" value="0.015" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                        <span id="thresholdValue" class="ml-3 text-sm text-gray-700 min-w-[80px] text-right">0.015</span>
+                    </div>
+                </div>
+                <button id="applyIntensitiesButton" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:shadow-md transition duration-150 ease-in-out">Apply & Calculate Intensities</button>
+            </div>
+                </div>
+            <!-- Right part of Row 2 -->
+            <div class="flex-1 flex gap-5">
+                <div id="noisePlotsDisplay" class="flex gap-5 w-2/3" style="display:none;">
+                    <div id="meanNoisePlotContainer" class="bg-white p-4 rounded-lg shadow-md w-1/2 flex flex-col"> <!-- ADDED flex flex-col -->
+                        <h3 class="text-lg font-semibold text-center mb-2 pb-2 border-b border-gray-200">Mean Noise vs. Exposure Time</h3>
+                        <div class="flex-grow flex items-center justify-center min-h-[200px] bg-gray-50 rounded p-1 border border-gray-200">
+                            <canvas id="noiseChartCanvas" class="max-w-full max-h-full object-contain"></canvas>
+                        </div>
+                    </div>
+                    <div id="backgroundMaskContainer" class="bg-white p-4 rounded-lg shadow-md w-1/2 flex flex-col"> <!-- ADDED flex flex-col -->
+                        <h3 class="text-lg font-semibold text-center mb-2 pb-2 border-b border-gray-200">Background Mask</h3>
+                        <div class="flex-grow flex items-center justify-center min-h-[200px] bg-gray-50 rounded p-1 border border-gray-200">
+                             <canvas id="backgroundMaskCanvas" class="max-w-full max-h-full object-contain" style="image-rendering: pixelated;"></canvas>
+                        </div>
+                         <p class="text-center mt-1 text-sm text-gray-600">Dark gray areas = identified background</p>
+                    </div>
+                </div>
+            
+                <!-- New Reconstructed Image Preview -->
+                <div id="reconstructedPreviewContainer" class="bg-white p-4 rounded-lg shadow-md w-1/3 flex flex-col" style="display:none;"> <!-- ADDED flex flex-col -->
+                    <h3 class="text-lg font-semibold mb-2 text-center pb-2 border-b border-gray-200">Reconstructed Image</h3>
+                        <div class="flex-grow flex items-center justify-center min-h-[200px] bg-gray-50 rounded border border-gray-200 p-1">
+                         <canvas id="reconstructedPreviewCanvas" class="max-w-full max-h-full object-contain"></canvas>
+                        </div>
+                     <p class="text-center mt-1 text-sm text-gray-600">Visual check</p>
+                    </div>
+                        </div>
+                    </div>
+
+        <!-- Row 4 -->
+        <div class="flex gap-5">
+            <!-- Left part of Row 4 -->
+            <div class="w-96 flex-shrink-0 flex flex-col gap-5">
+            <div id="cropDataCaptureSection" class="bg-white p-4 rounded-lg shadow-md analysis-section" style="display:none;">
+                    <!-- MODIFIED: Title and Manage Categories Button -->
+                    <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold">4. Crop Analysis & Data Capture</h2>
+                        <button id="manageCategoriesButton" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-1 px-2 rounded-md text-xs flex items-center justify-center" title="Manage Categories">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                                <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.532 1.532 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.532 1.532 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106A1.532 1.532 0 0111.49 3.17zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">Click on the image and select the band of interest to extract the intensity value. Fine-tune the position with the keyboard arrows. When the output is satisfactory, click "Save Current Value".</p>
+                    
+                    <!-- REMOVED: Old Manage Categories Button div
+                    <div class="mb-3">
+                        <button id="manageCategoriesButton" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-3 rounded-lg shadow hover:shadow-md transition duration-150 ease-in-out text-sm">Manage Categories</button>
+                    </div>
+                    -->
+
+                <label for="opt1Select" class="block text-sm font-medium text-gray-700 mb-1">Membrane:</label> <select id="opt1Select" class="w-full p-2 mb-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
+                <label for="opt2Select" class="block text-sm font-medium text-gray-700 mb-1">Lane:</label> <select id="opt2Select" class="w-full p-2 mb-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
+                <label for="opt3Select" class="block text-sm font-medium text-gray-700 mb-1">Protein:</label> <select id="opt3Select" class="w-full p-2 mb-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
+                    <button id="saveCurrentCropSumButton" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:shadow-md transition duration-150 ease-in-out">Save Current Value</button>
+            </div>
+            <div id="exportResultsSection" class="bg-white p-4 rounded-lg shadow-md analysis-section" style="display:none;">
+                <h2 class="text-xl font-semibold mb-3 pb-2 border-b border-gray-200">5. Export Results</h2>
+                <label for="outputFileName" class="block text-sm font-medium text-gray-700 mb-1">File Name:</label>
+                <input type="text" id="outputFileName" value="wb_results.xlsx" class="w-full p-2 mb-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                <button id="exportToExcelButton" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:shadow-md transition duration-150 ease-in-out">Export to Excel</button>
+                 <div id="resultsLogContainer" class="mt-4">
+                    <h3 class="text-md font-semibold text-gray-800 mb-1">Saved Results Log:</h3>
+                    <div id="resultsLog" class="p-2 bg-gray-50 border border-gray-200 rounded-md max-h-32 overflow-y-auto text-xs font-mono whitespace-pre-wrap">No results saved yet.</div>
+                 </div>
+            </div>
+        </div>
+            <!-- Right part of Row 4 -->
+            <div class="flex-1 flex gap-5"> <!-- MODIFIED: flex-col to flex (or flex-row) -->
+            <!-- NEW SECTION FOR RECONSTRUCTED INTENSITY IMAGE -->
+                <div id="reconstructedImageDisplay" class="bg-white p-4 rounded-lg shadow-md w-3/5" style="display:none;"> <!-- CHANGED w-1/2 to w-3/5 -->
+                <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-lg font-semibold">Band Selection</h3> <!-- CHANGED NAME -->
+                    <span id="reconstructedImageInfo" class="text-sm text-gray-600"></span> <!-- Info about this image -->
+                </div>
+                    <!-- SLIDER DIV MOVED FROM HERE -->
+                <div class="flex items-center justify-center min-h-[300px] bg-gray-50 rounded border border-gray-200 p-1">
+                     <canvas id="reconstructedIntensityCanvas" class="max-w-full max-h-full object-contain cursor-crosshair"></canvas>
+                </div>
+                <div id="reconstructedImageViewerControls" class="mt-3"> <!-- Controls for reconstructed image -->
+                    <div class="text-center text-sm text-gray-700">Clicked Position (model input center): <span id="reconstructedClickedPosDisplay">(x: -, y: -)</span></div>
+                        </div>
+                    <!-- New Slider for selecting display exposure - MOVED TO HERE and STYLES ADJUSTED -->
+                    <div class="mt-3">
+                        <label for="bandSelectionDisplaySlider" id="bandSelectionDisplayInfo" class="block text-sm font-medium text-gray-700 mb-1">Display Exposure: Index 0 (Time: 0s)</label>
+                        <input type="range" id="bandSelectionDisplaySlider" min="0" max="0" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                </div>
+            </div>
+            <!-- End New Section -->
+
+                <div id="onnxCropAnalysisDisplay" class="bg-white p-4 rounded-lg shadow-md w-2/5" style="display:none;"> <!-- CHANGED w-1/2 to w-2/5 -->
+                     <h3 class="text-lg font-semibold mb-3">Band Analysis</h3>
+                     <div class="flex justify-center mb-3">
+                        <div class="w-auto max-w-full p-1 bg-gray-50 border border-gray-200 rounded">
+                            <canvas id="cropSectionsCanvas" width="500" height="500" class="max-w-full max-h-full object-contain" style="image-rendering: crisp-edges;"></canvas>
+                    </div>
+                </div>
+                    <!-- REPLACE ENTIRE SLIDER STRUCTURE -->
+                    <div class="mb-2 flex items-center">
+                        <label for="horizontalSlider" class="w-40 text-sm font-medium text-gray-700">Horizontal Section:</label>
+                        <input type="range" id="horizontalSlider" min="0" max="63" value="32" class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                        <span id="horizontalValue" class="ml-3 w-8 text-sm text-gray-700 text-right">32</span>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="verticalSlider" class="w-40 text-sm font-medium text-gray-700">Vertical Section:</label>
+                        <input type="range" id="verticalSlider" min="0" max="63" value="32" class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                        <span id="verticalValue" class="ml-3 w-8 text-sm text-gray-700 text-right">32</span>
+                </div>
+            </div>
+                        </div>
+                    </div>
+
+                        </div>
+
+    <div id="setupControls" class="control-group" style="display:none !important;">Original Setup Controls - Will be removed</div>
+    <div id="noiseAnalysisArea" class="control-group" style="display:none !important;">Original Noise Analysis - Will be removed</div>
+    <div class="main-container" id="mainContainer" style="display:none !important;">Original Main Container - Will be removed</div>
+
+    <!-- MODIFIED STATUS AREA: Thinner padding -->
+    <div id="statusArea" class="fixed bottom-0 left-0 right-0 bg-white p-2 border-t border-gray-200 shadow-md z-50 text-center">
+        <p class="m-0 text-sm">Status: <span id="statusText" class="italic text-gray-700">Ready. Select TIF files and ONNX model, then click "Load Data & Model".</span></p>
+                    </div>
+
+    <!-- ADDED: Modal for Managing Categories -->
+    <div id="manageCategoriesModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center" style="display:none; z-index: 100;">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-semibold mb-6">Manage Categories</h2>
+            
+            <!-- Membrane Options Management -->
+            <div class="mb-6 pb-4 border-b">
+                <h3 class="text-lg font-medium text-gray-800 mb-3">Membrane Options</h3>
+                <div id="currentMembraneOptionsContainer" class="mb-3 max-h-40 overflow-y-auto p-2 border rounded">
+                    <!-- Current options will be listed here -->
+                        </div>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="newMembraneOptionInput" placeholder="New membrane name" class="flex-grow p-2 border border-gray-300 rounded-md text-sm">
+                    <button id="addMembraneOptionButton" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-3 rounded-md text-sm">Add</button>
+                    </div>
+            </div>
+
+            <!-- Lane Options Management -->
+            <div class="mb-6 pb-4 border-b">
+                <h3 class="text-lg font-medium text-gray-800 mb-3">Lane Options</h3>
+                <div id="currentLaneOptionsContainer" class="mb-3 max-h-40 overflow-y-auto p-2 border rounded">
+                    <!-- Current options will be listed here -->
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="newLaneOptionInput" placeholder="New lane name" class="flex-grow p-2 border border-gray-300 rounded-md text-sm">
+                    <button id="addLaneOptionButton" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-3 rounded-md text-sm">Add</button>
+                </div>
+            </div>
+
+            <!-- Protein Options Management -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-gray-800 mb-3">Protein Options</h3>
+                <div id="currentProteinOptionsContainer" class="mb-3 max-h-40 overflow-y-auto p-2 border rounded">
+                    <!-- Current options will be listed here -->
+                    </div>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="newProteinOptionInput" placeholder="New protein name" class="flex-grow p-2 border border-gray-300 rounded-md text-sm">
+                    <button id="addProteinOptionButton" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-3 rounded-md text-sm">Add</button>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end gap-3">
+                <button id="cancelCategoryChangesButton" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-md">Cancel</button>
+                <button id="saveCategoryChangesButton" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md">Save Changes</button>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        const MAX_TIF_VALUE = 2**16 - 1;
+        const CROP_SIZE = 64;
+        let BACKGROUND_THRESHOLD = 0.015;
+        const SATURATION_THRESHOLD = 0.99; // Added from Python script
+        
+        // MODIFIED: OPTIONS arrays are now 'let'
+        let OPTIONS_1 = ["Membrane 1", "Membrane 2"];
+        let OPTIONS_2 = ["Lane 1", "Lane 2", "Lane 3", "Lane 4", "Lane 5", "Lane 6", "Lane 7", "Lane 8", "Lane 9", "Lane 10"];
+        let OPTIONS_3 = ["FH", "FHL1", "FHR-1beta", "FHR-1alfa", "FHR-2alfa", "FHR-2","FHR-3","FHR-4A","FHR-5"];
+
+        // LocalStorage keys
+        const OPTIONS_1_KEY = 'wbAnalyzer_options1';
+        const OPTIONS_2_KEY = 'wbAnalyzer_options2';
+        const OPTIONS_3_KEY = 'wbAnalyzer_options3';
+
+        // ADDED: Temporary arrays for modal editing
+        let tempOptions1 = [];
+        let tempOptions2 = [];
+        let tempOptions3 = [];
+
+        let isReconstructedPreviewUpToDate = false; // ADDED: State for reconstructed preview
+
+        let tifFiles = [];
+        let processedImagesData = []; // This will store the time series {name, width, height, data (inverted, 0-1 normalized), exposureTime}
+        let currentImageIndex = 0;
+        let onnxSession = null;
+        let lastClickedPosition = { x: -1, y: -1 }; // Will be used for reconstructed image
+        let resultsDict = [];
+        // let backgroundMean = 0; // This will be derived from meanNoiseValuesArray
+        let noiseValues = []; // Will be renamed to meanNoiseValuesArray for clarity
+        let exposureTimes = []; // Extracted from filenames, corresponding to processedImagesData
+        let backgroundMask = null; // The single mask derived from average of time series
+        let noiseChart = null;
+        let inputCropData = null;
+        let outputCropData = null;
+        let horizontalIndex = 32;
+        let verticalIndex = 32;
+
+        // ADDED: Helper function to get max value in central 8x8 patch
+        function getCentralPatchMax(cropData, cropSize = 64, patchSize = 8) {
+            if (!cropData || cropData.length !== cropSize * cropSize) return 0.00001; // Default if no data or wrong size
+            let maxVal = 0.0; // Start with 0.0, as data is Float32
+            const startPixel = Math.floor(cropSize / 2) - Math.floor(patchSize / 2);
+            const endPixel = startPixel + patchSize;
+
+            for (let r = startPixel; r < endPixel; r++) {
+                for (let c = startPixel; c < endPixel; c++) {
+                    const val = cropData[r * cropSize + c];
+                    if (val > maxVal) {
+                        maxVal = val;
+                    }
+                }
+            }
+            return maxVal > 0 ? maxVal : 0.00001; // Avoid division by zero or using 0 if all pixels in patch are 0
+        }
+
+        // ADDED: Helper function to normalize data by a given max value and cap at 1.0
+        function normalizeDataByMax(data, maxValue) {
+            if (!data) return null; // Return null if no input data
+            // If maxValue is effectively zero (e.g., 0.00001 and all data is 0), return a zeroed array of the same size.
+            // Otherwise, proceed with normalization.
+            const effectivelyZeroMax = maxValue < 0.0001; // A small threshold
+
+            const normalized = new Float32Array(data.length);
+            for (let i = 0; i < data.length; i++) {
+                if (effectivelyZeroMax) {
+                     normalized[i] = 0.0; // If max is zero, all normalized values are zero
+                } else {
+                    normalized[i] = Math.min(1.0, data[i] / maxValue);
+                }
+            }
+            return normalized;
+        }
+
+        // New global variables for reconstructed image and its components
+        let reconstructedIntensityData = null; // {width, height, data (Float32Array)}
+        let meanNoiseValuesArray = []; // Array of mean noise values, one for each image in processedImagesData
+
+        // Variables for the reconstructed preview canvas (ADDED)
+        let reconstructedPreviewCanvas = null;
+        let reconstructedPreviewCtx = null;
+
+        let currentBandSelectionDisplayIndex = 0; // ADDED: For the new slider
+
+        // Debounce utility function
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        }
+
+        const debouncedDrawCropSections = debounce(drawCropSections, 50);
+        const debouncedHandleNoiseThresholdInteraction = debounce(handleNoiseThresholdInteraction, 250); // ADDED
+
+        const tifFileInput = document.getElementById('tifFileInput');
+        const onnxModelInput = document.getElementById('onnxModelInput');
+        const loadDataButton = document.getElementById('loadDataButton');
+        const tifFileCountDisplay = document.getElementById('tifFileCount');
+        const onnxFileNameDisplay = document.getElementById('onnxFileName');
+
+        // ADDED: Custom button for TIF folder selection
+        const customTifFolderButton = document.getElementById('customTifFolderButton');
+
+        const exposureSlider = document.getElementById('exposureSlider');
+        const exposureInfo = document.getElementById('exposureInfo');
+        const currentFileName = document.getElementById('currentFileName');
+        const currentFileNameDisplay = document.getElementById('currentFileNameDisplay');
+
+        const noiseThresholdSlider = document.getElementById('noiseThresholdSlider');
+        const thresholdValue = document.getElementById('thresholdValue');
+        const applyIntensitiesButton = document.getElementById('applyIntensitiesButton');
+
+        const opt1Select = document.getElementById('opt1Select');
+        const opt2Select = document.getElementById('opt2Select');
+        const opt3Select = document.getElementById('opt3Select');
+        const saveCurrentCropSumButton = document.getElementById('saveCurrentCropSumButton');
+
+        const outputFileNameInput = document.getElementById('outputFileName');
+        const exportToExcelButton = document.getElementById('exportToExcelButton');
+        const resultsLog = document.getElementById('resultsLog');
+        
+        const timeSeriesCanvas = document.getElementById('timeSeriesCanvas'); // Renamed
+        const timeSeriesCtx = timeSeriesCanvas.getContext('2d'); // Renamed
+        const imageExposureInfo = document.getElementById('imageExposureInfo');
+        const clickedPosDisplay = document.getElementById('clickedPosDisplay'); // This was for the old main canvas
+        const btnUp = document.getElementById('btnUp');             // Old button
+        const btnDown = document.getElementById('btnDown');           // Old button
+        const btnLeft = document.getElementById('btnLeft');           // Old button
+        const btnRight = document.getElementById('btnRight');         // Old button
+        
+        // New canvas and controls for Reconstructed Intensity Image
+        const reconstructedIntensityCanvas = document.getElementById('reconstructedIntensityCanvas');
+        const reconstructedIntensityCtx = reconstructedIntensityCanvas.getContext('2d');
+        const reconstructedClickedPosDisplay = document.getElementById('reconstructedClickedPosDisplay');
+        const btnUpReconstructed = document.getElementById('btnUpReconstructed');
+        const btnDownReconstructed = document.getElementById('btnDownReconstructed');
+        const btnLeftReconstructed = document.getElementById('btnLeftReconstructed');
+        const btnRightReconstructed = document.getElementById('btnRightReconstructed');
+
+        const noiseChartCanvas = document.getElementById('noiseChartCanvas');
+        const backgroundMaskCanvas = document.getElementById('backgroundMaskCanvas');
+        const backgroundMaskCtx = backgroundMaskCanvas.getContext('2d');
+
+        const cropSectionsCanvas = document.getElementById('cropSectionsCanvas');
+        const cropSectionsCtx = cropSectionsCanvas.getContext('2d');
+        // const outputCropSum = document.getElementById('outputCropSum'); // REMOVED
+        const horizontalSlider = document.getElementById('horizontalSlider');
+        const verticalSlider = document.getElementById('verticalSlider');
+        const horizontalValue = document.getElementById('horizontalValue');
+        const verticalValue = document.getElementById('verticalValue');
+
+        const statusText = document.getElementById('statusText');
+
+        const loadDataSection = document.getElementById('loadDataSection');
+        const exposurePreviewSection = document.getElementById('exposurePreviewSection');
+        const backgroundCorrectionSection = document.getElementById('backgroundCorrectionSection');
+        const pixelDiagnosticsSection = document.getElementById('pixelDiagnosticsSection');
+        const cropDataCaptureSection = document.getElementById('cropDataCaptureSection');
+        const exportResultsSection = document.getElementById('exportResultsSection');
+
+        const imagePreviewDisplay = document.getElementById('imagePreviewDisplay');
+        const noisePlotsDisplay = document.getElementById('noisePlotsDisplay');
+        const onnxCropAnalysisDisplay = document.getElementById('onnxCropAnalysisDisplay');
+        const reconstructedImageDisplay = document.getElementById('reconstructedImageDisplay'); // New section DIV
+        const reconstructedPreviewContainer = document.getElementById('reconstructedPreviewContainer'); // ADDED
+
+        const bandSelectionDisplaySlider = document.getElementById('bandSelectionDisplaySlider'); // ADDED
+        const bandSelectionDisplayInfo = document.getElementById('bandSelectionDisplayInfo'); // ADDED
+
+        // ADDED: Modal elements
+        const manageCategoriesModal = document.getElementById('manageCategoriesModal');
+        const manageCategoriesButton = document.getElementById('manageCategoriesButton');
+        const cancelCategoryChangesButton = document.getElementById('cancelCategoryChangesButton');
+        const saveCategoryChangesButton = document.getElementById('saveCategoryChangesButton');
+        
+        const currentMembraneOptionsContainer = document.getElementById('currentMembraneOptionsContainer');
+        const newMembraneOptionInput = document.getElementById('newMembraneOptionInput');
+        const addMembraneOptionButton = document.getElementById('addMembraneOptionButton');
+        
+        const currentLaneOptionsContainer = document.getElementById('currentLaneOptionsContainer');
+        const newLaneOptionInput = document.getElementById('newLaneOptionInput');
+        const addLaneOptionButton = document.getElementById('addLaneOptionButton');
+
+        const currentProteinOptionsContainer = document.getElementById('currentProteinOptionsContainer');
+        const newProteinOptionInput = document.getElementById('newProteinOptionInput');
+        const addProteinOptionButton = document.getElementById('addProteinOptionButton');
+
+        // ADDED: Functions for localStorage
+        function loadOptionsFromLocalStorage() {
+            const storedOptions1 = localStorage.getItem(OPTIONS_1_KEY);
+            if (storedOptions1) OPTIONS_1 = JSON.parse(storedOptions1);
+
+            const storedOptions2 = localStorage.getItem(OPTIONS_2_KEY);
+            if (storedOptions2) OPTIONS_2 = JSON.parse(storedOptions2);
+
+            const storedOptions3 = localStorage.getItem(OPTIONS_3_KEY);
+            if (storedOptions3) OPTIONS_3 = JSON.parse(storedOptions3);
+        }
+
+        function saveOptionsToLocalStorage() {
+            localStorage.setItem(OPTIONS_1_KEY, JSON.stringify(OPTIONS_1));
+            localStorage.setItem(OPTIONS_2_KEY, JSON.stringify(OPTIONS_2));
+            localStorage.setItem(OPTIONS_3_KEY, JSON.stringify(OPTIONS_3));
+        }
+
+        function initialize() {
+            loadOptionsFromLocalStorage(); // ADDED: Load options at init
+            populateDropdowns();
+            loadDataButton.addEventListener('click', handleLoadData);
+            
+            // Listener for the custom TIF folder button to trigger hidden file input
+            if (customTifFolderButton) {
+                customTifFolderButton.addEventListener('click', () => {
+                    tifFileInput.click();
+                });
+            }
+            
+            tifFileInput.addEventListener('change', () => {
+                // Filter for actual TIF/TIFF files when webkitdirectory is used
+                const allFiles = Array.from(tifFileInput.files);
+                const validTifFiles = allFiles.filter(file => 
+                    file.name.toLowerCase().endsWith('.tif') || file.name.toLowerCase().endsWith('.tiff')
+                );
+                tifFileCountDisplay.textContent = validTifFiles.length > 0 ? `(${validTifFiles.length} TIFF files)` : '(0 TIFF files)';
+                
+                // Revert custom button to default style if user changes selection
+                if (customTifFolderButton) {
+                    customTifFolderButton.classList.remove('bg-green-50', 'text-green-700', 'hover:bg-green-100');
+                    customTifFolderButton.classList.add('bg-blue-50', 'text-blue-700', 'hover:bg-blue-100');
+                }
+            });
+            onnxModelInput.addEventListener('change', () => {
+                onnxFileNameDisplay.textContent = onnxModelInput.files.length > 0 ? `(${onnxModelInput.files[0].name})` : '';
+                // Revert to default style if user changes selection
+                onnxModelInput.classList.remove('file:bg-green-50', 'file:text-green-700', 'hover:file:bg-green-100');
+                onnxModelInput.classList.add('file:bg-blue-50', 'file:text-blue-700', 'hover:file:bg-blue-100');
+            });
+
+            exposureSlider.addEventListener('input', handleSliderChange); // Main left panel slider
+            noiseThresholdSlider.addEventListener('input', (event) => {
+                localStorage.setItem('backgroundThreshold', event.target.value.toString());
+
+                isReconstructedPreviewUpToDate = false; // Mark preview as stale
+                if (reconstructedPreviewCanvas && reconstructedPreviewCtx) { 
+                    reconstructedPreviewCtx.clearRect(0, 0, reconstructedPreviewCanvas.width, reconstructedPreviewCanvas.height); // Clear canvas
+                }
+                // DO NOT HIDE reconstructedPreviewContainer here, just clear its canvas.
+                statusText.textContent = "Threshold changed. Click 'Apply & Calculate Intensities' to update and view reconstructed image.";
+                
+                debouncedHandleNoiseThresholdInteraction();
+            });
+            applyIntensitiesButton.addEventListener('click', () => {
+                const currentThreshold = parseFloat(noiseThresholdSlider.value);
+                BACKGROUND_THRESHOLD = currentThreshold;
+                localStorage.setItem('backgroundThreshold', currentThreshold.toString());
+                // statusText.textContent = "Calculating reconstructed intensities..."; // Moved to calc function
+                calculateAndDisplayReconstructedImage(true); // Pass true for explicit apply
+            });
+
+            saveCurrentCropSumButton.addEventListener('click', saveCurrentResult);
+            exportToExcelButton.addEventListener('click', exportResultsToExcel);
+            reconstructedIntensityCanvas.addEventListener('click', handleReconstructedCanvasClick);
+            horizontalSlider.addEventListener('input', (event) => {
+                handleHorizontalSliderChange(event);
+                debouncedDrawCropSections();
+            });
+            verticalSlider.addEventListener('input', (event) => {
+                handleVerticalSliderChange(event);
+                debouncedDrawCropSections();
+            });
+            document.addEventListener('keydown', handleKeyDown);
+
+            bandSelectionDisplaySlider.addEventListener('input', handleBandSelectionDisplaySliderChange); // Listener for NEW slider
+
+            // Preview canvas context
+            reconstructedPreviewCanvas = document.getElementById('reconstructedPreviewCanvas'); 
+            if (reconstructedPreviewCanvas) { 
+                reconstructedPreviewCtx = reconstructedPreviewCanvas.getContext('2d');
+            } else {
+                console.error("Reconstructed Preview Canvas not found!");
+            }
+            
+            // Load initial BACKGROUND_THRESHOLD from localStorage (this is a one-time setup on page load)
+            const savedThreshold = localStorage.getItem('backgroundThreshold');
+            if (savedThreshold) {
+                const threshold = parseFloat(savedThreshold);
+                noiseThresholdSlider.value = threshold;
+                BACKGROUND_THRESHOLD = threshold;
+            }
+            // Update display for this initial threshold - it will be updated more fully by handleLoadData or interaction
+            updateThresholdDisplay(parseFloat(noiseThresholdSlider.value));
+
+            // Initial text for ONNX sliders 
+            horizontalValue.textContent = horizontalSlider.value;
+            verticalValue.textContent = verticalSlider.value;
+
+            // ADDED: Event listeners for modal
+            if (manageCategoriesButton) {
+                manageCategoriesButton.addEventListener('click', () => {
+                    if (manageCategoriesModal) {
+                        populateModalForEditing(); 
+                        manageCategoriesModal.style.display = 'flex';
+                    }
+                });
+            }
+            if (cancelCategoryChangesButton) {
+                cancelCategoryChangesButton.addEventListener('click', () => {
+                    if (manageCategoriesModal) manageCategoriesModal.style.display = 'none';
+                });
+            }
+            if (saveCategoryChangesButton) {
+                saveCategoryChangesButton.addEventListener('click', () => {
+                    OPTIONS_1 = [...tempOptions1];
+                    OPTIONS_2 = [...tempOptions2];
+                    OPTIONS_3 = [...tempOptions3];
+                    
+                    saveOptionsToLocalStorage();
+                    populateDropdowns();
+                    if (manageCategoriesModal) manageCategoriesModal.style.display = 'none';
+                });
+            }
+
+            // Event listeners for Add buttons in Modal
+            if (addMembraneOptionButton) {
+                addMembraneOptionButton.addEventListener('click', () => {
+                    const newValue = newMembraneOptionInput.value.trim();
+                    if (newValue && !tempOptions1.includes(newValue)) {
+                        tempOptions1.push(newValue);
+                        renderCategoryOptionsInModal(tempOptions1, currentMembraneOptionsContainer, 'Membrane', tempOptions1); // Pass tempOptions1
+                        newMembraneOptionInput.value = '';
+                    }
+                });
+            }
+            if (addLaneOptionButton) {
+                addLaneOptionButton.addEventListener('click', () => {
+                    const newValue = newLaneOptionInput.value.trim();
+                    if (newValue && !tempOptions2.includes(newValue)) {
+                        tempOptions2.push(newValue);
+                        renderCategoryOptionsInModal(tempOptions2, currentLaneOptionsContainer, 'Lane', tempOptions2); // Pass tempOptions2
+                        newLaneOptionInput.value = '';
+                    }
+                });
+            }
+            if (addProteinOptionButton) {
+                addProteinOptionButton.addEventListener('click', () => {
+                    const newValue = newProteinOptionInput.value.trim();
+                    if (newValue && !tempOptions3.includes(newValue)) {
+                        tempOptions3.push(newValue);
+                        renderCategoryOptionsInModal(tempOptions3, currentProteinOptionsContainer, 'Protein', tempOptions3); // Pass tempOptions3
+                        newProteinOptionInput.value = '';
+                    }
+                });
+            }
+        }
+
+        function populateDropdowns() {
+            // Clear existing options before populating
+            opt1Select.innerHTML = '';
+            opt2Select.innerHTML = '';
+            opt3Select.innerHTML = '';
+
+            OPTIONS_1.forEach(opt => opt1Select.add(new Option(opt, opt)));
+            OPTIONS_2.forEach(opt => opt2Select.add(new Option(opt, opt)));
+            OPTIONS_3.forEach(opt => opt3Select.add(new Option(opt, opt)));
+        }
+
+        // MODIFIED: Full implementation for modal population and interaction
+        function populateModalForEditing() {
+            // Create temporary copies for editing
+            tempOptions1 = [...OPTIONS_1];
+            tempOptions2 = [...OPTIONS_2];
+            tempOptions3 = [...OPTIONS_3];
+
+            renderCategoryOptionsInModal(tempOptions1, currentMembraneOptionsContainer, 'Membrane');
+            renderCategoryOptionsInModal(tempOptions2, currentLaneOptionsContainer, 'Lane');
+            renderCategoryOptionsInModal(tempOptions3, currentProteinOptionsContainer, 'Protein');
+        }
+
+        function renderCategoryOptionsInModal(optionsArray, container, categoryType) {
+            container.innerHTML = ''; // Clear existing items
+            if (optionsArray.length === 0) {
+                container.textContent = 'No options defined.';
+                container.classList.add('text-gray-500', 'italic');
+                return;
+            }
+            container.classList.remove('text-gray-500', 'italic');
+
+            const ul = document.createElement('ul');
+            ul.className = 'list-disc pl-5 space-y-1';
+
+            optionsArray.forEach((option, index) => {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center py-1';
+                
+                const textSpan = document.createElement('span');
+                textSpan.textContent = option;
+                textSpan.className = 'text-sm';
+
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'Remove';
+                removeButton.className = 'bg-red-500 hover:bg-red-600 text-white text-xs font-semibold py-1 px-2 rounded-md';
+                removeButton.onclick = () => {
+                    optionsArray.splice(index, 1); // Modify the passed array (which is a temp array)
+                    renderCategoryOptionsInModal(optionsArray, container, categoryType); // Re-render this list
+                };
+
+                li.appendChild(textSpan);
+                li.appendChild(removeButton);
+                ul.appendChild(li);
+            });
+            container.appendChild(ul);
+        }
+
+        function readFileAsArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        async function handleLoadData() {
+            statusText.textContent = "Loading TIF images... (handleLoadData started)";
+            const allSelectedFiles = Array.from(tifFileInput.files); 
+
+            // Filter for actual TIF/TIFF files when webkitdirectory is used
+            const validTifFiles = allSelectedFiles.filter(file => 
+                file.name.toLowerCase().endsWith('.tif') || file.name.toLowerCase().endsWith('.tiff')
+            );
+
+            if (validTifFiles.length === 0) {
+                statusText.textContent = "No TIFF files found in the selected folder.";
+                // Update count display as well
+                tifFileCountDisplay.textContent = '(0 TIFF files)';
+                // Style custom button instead of file input
+                 if (customTifFolderButton) {
+                    customTifFolderButton.classList.remove('bg-green-50', 'text-green-700', 'hover:bg-green-100');
+                    customTifFolderButton.classList.add('bg-blue-50', 'text-blue-700', 'hover:bg-blue-100');
+                }
+                return;
+            }
+            // Store only valid TIF files globally
+            tifFiles = validTifFiles; 
+            // Update the display count based on filtered files
+            tifFileCountDisplay.textContent = `(${tifFiles.length} TIFF files)`;
+
+            // Style custom TIF button as success
+            if (customTifFolderButton) {
+                customTifFolderButton.classList.remove('bg-blue-50', 'text-blue-700', 'hover:bg-blue-100');
+                customTifFolderButton.classList.add('bg-green-50', 'text-green-700', 'hover:bg-green-100');
+            }
+
+            let tempRawImages = [];
+
+            for (let i = 0; i < tifFiles.length; i++) {
+                const file = tifFiles[i];
+                statusText.textContent = `Processing TIF ${i + 1}/${tifFiles.length}: ${file.name}...`;
+                console.log(`Processing ${file.name}...`);
+                try {
+                    const arrayBuffer = await readFileAsArrayBuffer(file);
+                    const tiff = new Tiff({ buffer: arrayBuffer });
+                    const width = tiff.width();
+                    const height = tiff.height();
+                    const exposure = extractExposureTime(file.name, i); // Pass index as fallback
+
+                    let rawPixelDataArray;
+                    let sourcePixelDataType = 'unknown';
+                    let currentMaxValForFile = MAX_TIF_VALUE;
+
+                    try {
+                        const rasters = tiff.readRasters({ samples: [0] });
+                        if (!rasters || !rasters[0] || rasters[0].length !== width * height) {
+                            throw new Error("Invalid raster data from tiff.readRasters()");
+                        }
+                        const tiffData = rasters[0];
+
+                        if (tiffData instanceof Uint8Array) {
+                            sourcePixelDataType = 'uint8';
+                            currentMaxValForFile = 255.0;
+                            rawPixelDataArray = new Float32Array(tiffData);
+                        } else if (tiffData instanceof Uint16Array) {
+                            sourcePixelDataType = 'uint16';
+                            currentMaxValForFile = MAX_TIF_VALUE;
+                            rawPixelDataArray = new Float32Array(tiffData);
+                        } else if (tiffData instanceof Float32Array) {
+                            sourcePixelDataType = 'float32';
+                            rawPixelDataArray = new Float32Array(tiffData);
+                            currentMaxValForFile = -1; // Signal float, direct inversion assumed
+                        } else {
+                            throw new Error(`Unexpected raster data type: ${tiffData ? tiffData.constructor.name : 'undefined'}`);
+                        }
+                    } catch (rasterError) {
+                        console.warn(`Error reading rasters for ${file.name}: ${rasterError.message}. Falling back to 8-bit canvas data.`);
+                        const tempCanvas = tiff.toCanvas();
+                        if (!tempCanvas) throw new Error("Fallback tiff.toCanvas() also failed.");
+                        const tempCtx = tempCanvas.getContext('2d');
+                        const imgDataFromCanvas = tempCtx.getImageData(0, 0, width, height);
+                        rawPixelDataArray = new Float32Array(width * height);
+                        for(let k=0; k < width*height; k++) rawPixelDataArray[k] = imgDataFromCanvas.data[k*4];
+                        sourcePixelDataType = 'uint8_fallback';
+                        currentMaxValForFile = 255.0;
+                    }
+                    
+                    tempRawImages.push({
+                        name: file.name, width, height,
+                        rawFloatData: rawPixelDataArray,
+                        sourcePixelDataType: sourcePixelDataType,
+                        currentMaxValForFile: currentMaxValForFile,
+                        exposureTime: exposure, // Original exposure time
+                    });
+                } catch (error) {
+                    console.error(`Failed to process TIF ${file.name}:`, error);
+                    statusText.textContent = `Error processing TIF ${file.name}: ${error.message}`;
+                }
+            }
+
+            statusText.textContent = "TIF file reading complete. Inverting and sorting images...";
+
+            let invertedImagesForSorting = tempRawImages.map(img => {
+                const invertedData = new Float32Array(img.rawFloatData.length);
+                let sumInverted = 0;
+                for (let j = 0; j < img.rawFloatData.length; j++) {
+                    let pixelVal = img.rawFloatData[j];
+                    if (img.sourcePixelDataType === 'uint8' || img.sourcePixelDataType === 'uint8_fallback') {
+                        pixelVal = pixelVal * (MAX_TIF_VALUE / 255.0);
+                    }
+                    invertedData[j] = MAX_TIF_VALUE - pixelVal;
+                    sumInverted += invertedData[j];
+                }
+                return {
+                    name: img.name, width: img.width, height: img.height,
+                    invertedData: invertedData,
+                    sumInverted: sumInverted,
+                    originalExposureTime: img.exposureTime
+                };
+            });
+
+            invertedImagesForSorting.sort((a, b) => a.sumInverted - b.sumInverted);
+
+            statusText.textContent = "Sorting complete. Normalizing and structuring image data...";
+
+            processedImagesData = [];
+            exposureTimes = [];
+
+            invertedImagesForSorting.forEach(img => {
+                const normalizedDisplayData = new Float32Array(img.invertedData.length);
+                for (let j = 0; j < img.invertedData.length; j++) {
+                    normalizedDisplayData[j] = img.invertedData[j] / MAX_TIF_VALUE;
+                    normalizedDisplayData[j] = Math.max(0.0, Math.min(1.0, normalizedDisplayData[j]));
+                }
+                processedImagesData.push({
+                    name: img.name,
+                    width: img.width,
+                    height: img.height,
+                    data: normalizedDisplayData, // This is (MAX_TIF_VALUE - original_scaled_value) / MAX_TIF_VALUE
+                    exposureTime: img.originalExposureTime
+                });
+                exposureTimes.push(img.originalExposureTime);
+            });
+            
+            if (processedImagesData.length > 0) { // Check for > 0 (no longer > 1 because zero image is removed)
+                statusText.textContent = `Normalization complete. ${processedImagesData.length} images processed. Updating UI...`;
+                exposurePreviewSection.style.display = 'block';
+                backgroundCorrectionSection.style.display = 'block';
+                // pixelDiagnosticsSection.style.display = 'block'; // REMOVED
+                cropDataCaptureSection.style.display = 'block';
+                exportResultsSection.style.display = 'block';
+
+                imagePreviewDisplay.style.display = 'block'; 
+                reconstructedImageDisplay.style.display = 'block'; 
+                reconstructedPreviewContainer.style.display = 'block'; // Ensure container is visible from the start of analysis sections
+                noisePlotsDisplay.style.display = 'flex';
+                // randomPixelPlotsDisplay.style.display = 'block'; // REMOVED
+                onnxCropAnalysisDisplay.style.display = 'block';  
+                
+                // Style TIF input as success
+                tifFileInput.classList.remove('file:bg-blue-50', 'file:text-blue-700', 'hover:file:bg-blue-100');
+                tifFileInput.classList.add('file:bg-green-50', 'file:text-green-700', 'hover:file:bg-green-100');
+
+                currentImageIndex = 0; // This is for the main exposure slider in left panel
+                exposureSlider.max = processedImagesData.length > 0 ? processedImagesData.length - 1 : 0;
+                exposureSlider.value = currentImageIndex;
+                updateExposureDisplays(); // For main exposure slider
+                displayTimeSeriesImage(); // ADDED: Initial draw for the time series preview
+
+                currentBandSelectionDisplayIndex = 0; // Initialize for new slider
+                bandSelectionDisplaySlider.max = processedImagesData.length > 0 ? processedImagesData.length - 1 : 0; 
+                bandSelectionDisplaySlider.value = currentBandSelectionDisplayIndex; 
+                updateBandSelectionDisplayInfo(); 
+                
+                // Initial draws after data is loaded and reconstructed data is calculated
+                // The call to calculateAndDisplayReconstructedImage will handle the first full draw
+                // displayTimeSeriesImage(); // Updates the left panel preview, called by handleSliderChange
+                
+                statusText.textContent = `${processedImagesData.length} TIF image(s) loaded. Initial calculations starting...`;
+                // Trigger the first full calculation and drawing sequence
+                // Pass false to indicate this is not an explicit user "Apply" action
+                calculateAndDisplayReconstructedImage(false);
+                
+                // Update status to guide user after initial load
+                if (processedImagesData.length > 0 && onnxModelInput.files.length > 0 && onnxSession) {
+                    statusText.textContent = `Data and model loaded. Adjust Background Threshold and click 'Apply & Calculate Intensities' to view reconstructed image.`;
+                } else if (processedImagesData.length > 0) {
+                    statusText.textContent = `Data loaded. ${onnxModelInput.files.length === 0 ? "ONNX model not selected. " : onnxSession === null ? "ONNX model failed to load. " : ""}Adjust Background Threshold and click 'Apply & Calculate Intensities'.`;
+                }
+
+            } else {
+                statusText.textContent = "No TIF images were successfully processed after all steps.";
+                console.warn("processedImagesData is empty after processing steps in handleLoadData.");
+                return;
+            }
+
+            if (onnxModelInput.files.length > 0) {
+                statusText.textContent += " Loading ONNX model...";
+                try {
+                    const modelFile = onnxModelInput.files[0];
+                    const modelBuffer = await readFileAsArrayBuffer(modelFile);
+                    onnxSession = await ort.InferenceSession.create(modelBuffer, { executionProviders: ['webgl', 'wasm'] });
+                    statusText.textContent = `All images and ONNX model "${modelFile.name}" loaded. Ready for analysis.`;
+                    // Style ONNX input as success
+                    onnxModelInput.classList.remove('file:bg-blue-50', 'file:text-blue-700', 'hover:file:bg-blue-100');
+                    onnxModelInput.classList.add('file:bg-green-50', 'file:text-green-700', 'hover:file:bg-green-100');
+                } catch (error) {
+                    console.error("Error loading ONNX model:", error);
+                    statusText.textContent = `Images loaded, but error loading ONNX model: ${error.message}`;
+                    onnxSession = null;
+                }
+            } else {
+                 statusText.textContent += " ONNX model file not selected. Some features disabled.";
+                 onnxSession = null;
+            }
+        }
+        
+        function calculateAndDisplayReconstructedImage(isExplicitApply) {
+            if (processedImagesData.length === 0) {
+                statusText.textContent = "No TIF images loaded to calculate intensities.";
+                console.warn("calculateAndDisplayReconstructedImage called with no processedImagesData.");
+                // Container remains visible, clear canvas if possible
+                if (reconstructedPreviewCanvas && reconstructedPreviewCtx) {
+                    reconstructedPreviewCtx.clearRect(0, 0, reconstructedPreviewCanvas.width, reconstructedPreviewCanvas.height);
+                }
+                isReconstructedPreviewUpToDate = false;
+                return;
+            }
+            
+            if (isExplicitApply) {
+                 statusText.textContent = "Calculating mean noise, mask, and reconstructed intensities...";
+            } // Initial load status is now more comprehensively set by handleLoadData
+
+            const { means, mask, stats } = calculateMeanNoiseAndMask(processedImagesData, BACKGROUND_THRESHOLD);
+            meanNoiseValuesArray = means; 
+            backgroundMask = mask;       
+
+            updateThresholdDisplay(BACKGROUND_THRESHOLD, stats.backgroundPercentage);
+            console.log("Mean noise values array length:", meanNoiseValuesArray.length);
+            console.log("Background mask generated.");
+
+            statusText.textContent = "Mean noise calculation complete. Calculating reconstructed intensities...";
+            const intensitiesResult = calculateReconstructedIntensities(
+                processedImagesData, 
+                exposureTimes,      
+                meanNoiseValuesArray, 
+                SATURATION_THRESHOLD 
+            );
+            reconstructedIntensityData = intensitiesResult; 
+
+            if (reconstructedIntensityData) {
+                // These are always updated
+                drawBandSelectionDisplayImage(); 
+                updateNoiseChart(); 
+                drawBackgroundMaskVisualization(); 
+                
+                if (isExplicitApply) {
+                    isReconstructedPreviewUpToDate = true; 
+                    // Container is already visible, just draw on its canvas
+                    drawReconstructedPreviewImage(); 
+                    statusText.textContent = "Analysis complete. Ready.";
+                } else { // Initial load or other non-explicit calls
+                    isReconstructedPreviewUpToDate = false;
+                    // Container is already visible, just clear its canvas
+                    if (reconstructedPreviewCanvas && reconstructedPreviewCtx) { 
+                        reconstructedPreviewCtx.clearRect(0, 0, reconstructedPreviewCanvas.width, reconstructedPreviewCanvas.height);
+                    }
+                    // Status for initial load is set in handleLoadData to be more specific about ONNX status
+                }
+                
+                if (lastClickedPosition.x !== -1 && lastClickedPosition.y !== -1) {
+                    updateAllCropsAndModel(); 
+                }
+            } else {
+                statusText.textContent = "Failed to calculate reconstructed intensities (result was null).";
+                console.error("Reconstructed intensity data is null after calling calculateReconstructedIntensities.");
+                isReconstructedPreviewUpToDate = false; 
+                // Container remains visible, clear canvas
+                if (reconstructedPreviewCanvas && reconstructedPreviewCtx) { 
+                    reconstructedPreviewCtx.clearRect(0, 0, reconstructedPreviewCanvas.width, reconstructedPreviewCanvas.height);
+                }
+            }
+        }
+
+        function calculateMeanNoiseAndMask(imagesDataArray, threshold) {
+            if (imagesDataArray.length === 0) {
+                console.warn("calculateMeanNoiseAndMask called with empty imagesDataArray");
+                return { means: [], mask: null, stats: { backgroundPercentage: 'N/A'} };
+            }
+            
+            const width = imagesDataArray[0].width;
+            const height = imagesDataArray[0].height;
+            const numPixels = width * height;
+            const numImages = imagesDataArray.length;
+
+            const averageImage = new Float32Array(numPixels).fill(0);
+            for (let i = 0; i < numImages; i++) {
+                for (let px = 0; px < numPixels; px++) {
+                    averageImage[px] += imagesDataArray[i].data[px];
+                }
+            }
+            for (let px = 0; px < numPixels; px++) {
+                averageImage[px] /= numImages;
+            }
+
+            const newBgMask = new Uint8Array(numPixels);
+            let backgroundPixelCountInMask = 0;
+            for (let px = 0; px < numPixels; px++) {
+                if (averageImage[px] < threshold) {
+                    newBgMask[px] = 1; 
+                    backgroundPixelCountInMask++;
+                } else {
+                    newBgMask[px] = 0; 
+                }
+            }
+            const backgroundPercentage = numPixels > 0 ? (backgroundPixelCountInMask / numPixels * 100).toFixed(1) : '0.0';
+
+            const newMeanNoiseValues = new Array(numImages).fill(0);
+            for (let i = 0; i < numImages; i++) {
+                let backgroundPixelsSum = 0;
+                let count = 0;
+                for (let px = 0; px < numPixels; px++) {
+                    if (newBgMask[px] === 1) { 
+                        backgroundPixelsSum += imagesDataArray[i].data[px];
+                        count++;
+                    }
+                }
+                newMeanNoiseValues[i] = (count > 0) ? (backgroundPixelsSum / count) : 0;
+            }
+            return { 
+                means: newMeanNoiseValues, 
+                mask: newBgMask, 
+                stats: { backgroundPercentage: backgroundPercentage } 
+            };
+        }
+
+        function calculateReconstructedIntensities(imagesDataArray, exposuresArray, noiseValArray, satThreshold) {
+            if (!imagesDataArray || imagesDataArray.length === 0 || 
+                imagesDataArray.length !== exposuresArray.length || 
+                imagesDataArray.length !== noiseValArray.length) {
+                console.error("calculateReconstructedIntensities: Mismatched array lengths or empty data for intensity calculation.");
+                return null;
+            }
+
+            const width = imagesDataArray[0].width;
+            const height = imagesDataArray[0].height;
+            const numPixels = width * height;
+            const numImages = imagesDataArray.length;
+            const intensities = new Float32Array(numPixels);
+
+            // Python adds a zero image and zero exposure time to the stack for regression.
+            // Let's consider if this is implicitly handled or needs to be added.
+            // The formula sum(xy)/sum(x^2) is for regression through origin.
+            // If we want to include a (0,0) point for each pixel (intensity=0 at exposure=0 after noise correction),
+            // it doesn't change sum(xy) or sum(x^2) if that point is (0,0).
+
+            for (let px = 0; px < numPixels; px++) {
+                let numerator = 0;
+                let denominator = 0;
+                let validPoints = 0;
+                
+                for (let i = 0; i < numImages; i++) {
+                    const imagePixelValue = imagesDataArray[i].data[px]; 
+                    const exposureTime = exposuresArray[i];
+                    const meanNoiseForThisImage = noiseValArray[i];
+                    const denoisedValue = imagePixelValue - meanNoiseForThisImage;
+
+                    if (denoisedValue < satThreshold && denoisedValue >= 0) {
+                        numerator += exposureTime * denoisedValue;
+                        denominator += exposureTime * exposureTime;
+                        validPoints++;
+                    }
+                }
+                // Python doesn't explicitly check for minimum valid points, but nansum handles cases with no valid data.
+                intensities[px] = (denominator === 0) ? 0 : (numerator / denominator);
+            }
+
+            let maxIntensity = -Infinity;
+            let minIntensity = Infinity; 
+            let hasValidIntensity = false;
+            for(let px=0; px < numPixels; px++) {
+                if (!isNaN(intensities[px])) {
+                    if (intensities[px] > maxIntensity) maxIntensity = intensities[px];
+                    if (intensities[px] < minIntensity) minIntensity = intensities[px];
+                    hasValidIntensity = true;
+                }
+            }
+            
+            minIntensity = Math.max(0, minIntensity);
+            const normalizedIntensities = new Float32Array(numPixels);
+
+            if (!hasValidIntensity) { 
+                 normalizedIntensities.fill(0); 
+            } else {
+                 const range = maxIntensity - minIntensity;
+                 for (let px = 0; px < numPixels; px++) {
+                    if (isNaN(intensities[px])) {
+                        normalizedIntensities[px] = 1.0; // Python nan_to_num(nan=1.0)
+                    } else {
+                        if (range === 0) {
+                             normalizedIntensities[px] = (intensities[px] >= minIntensity && minIntensity > 0) ? 1.0 : 0.0; 
+                        } else {
+                            normalizedIntensities[px] = (intensities[px] - minIntensity) / range;
+                        }
+                        normalizedIntensities[px] = Math.max(0.0, Math.min(1.0, normalizedIntensities[px]));
+                    }
+                }
+            }
+            return { width: width, height: height, data: normalizedIntensities, isNormalized: true };
+        }
+
+        // displayTimeSeriesImage remains largely the same, shows processedImagesData[currentImageIndex].data
+        // displayReconstructedIntensityImage remains largely the same
+
+        function displayTimeSeriesImage() {
+            if (processedImagesData.length === 0 || !processedImagesData[currentImageIndex]) return;
+
+            const img = processedImagesData[currentImageIndex];
+            timeSeriesCanvas.width = img.width;
+            timeSeriesCanvas.height = img.height;
+            
+            const imageData = timeSeriesCtx.createImageData(img.width, img.height);
+            for (let i = 0; i < img.data.length; i++) {
+                const val = Math.floor((1 - img.data[i]) * 255); // Invert for display (0=black)
+                imageData.data[i * 4 + 0] = val; imageData.data[i * 4 + 1] = val;
+                imageData.data[i * 4 + 2] = val; imageData.data[i * 4 + 3] = 255;
+            }
+            timeSeriesCtx.putImageData(imageData, 0, 0);
+
+            updateExposureDisplays();
+            // Crosshairs/crop box on timeSeriesCanvas might be removed if all interaction moves to reconstructed
+            /* if (lastClickedPosition.x !== -1 && lastClickedPosition.y !== -1) { 
+                timeSeriesCtx.strokeStyle = 'red'; timeSeriesCtx.lineWidth = 0.5;
+                timeSeriesCtx.beginPath(); timeSeriesCtx.moveTo(0, lastClickedPosition.y); timeSeriesCtx.lineTo(img.width, lastClickedPosition.y); timeSeriesCtx.stroke();
+                timeSeriesCtx.beginPath(); timeSeriesCtx.moveTo(lastClickedPosition.x, 0); timeSeriesCtx.lineTo(lastClickedPosition.x, img.height); timeSeriesCtx.stroke();
+                timeSeriesCtx.strokeStyle = 'rgba(255, 0, 0, 0.7)'; timeSeriesCtx.lineWidth = 1;
+                timeSeriesCtx.strokeRect(lastClickedPosition.x - CROP_SIZE / 2, lastClickedPosition.y - CROP_SIZE / 2, CROP_SIZE, CROP_SIZE);
+            } */
+            
+            // columnIndexSlider relates to the image being analyzed for column scan, which will be reconstructed.
+            // Update it when reconstructed image is ready.
+            // drawIntensityColumnScan(); // This will be called when reconstructed image is ready
+            // drawBackgroundMaskVisualization(); // This too
+        }
+        
+        function displayReconstructedIntensityImage() {
+            if (!reconstructedIntensityData || !reconstructedIntensityData.data) {
+                if (reconstructedIntensityCtx) reconstructedIntensityCtx.clearRect(0, 0, reconstructedIntensityCanvas.width, reconstructedIntensityCanvas.height);
+                if (reconstructedPreviewCtx) reconstructedPreviewCtx.clearRect(0, 0, reconstructedPreviewCanvas.width, reconstructedPreviewCanvas.height); // ADDED
+                return;
+            }
+
+            const img = reconstructedIntensityData; // {width, height, data (normalized 0-1, 1=high intensity)}
+
+            // Prepare ImageData once
+            const commonImageData = new ImageData(img.width, img.height);
+            for (let i = 0; i < img.data.length; i++) {
+                const val = Math.floor((1.0 - img.data[i]) * 255); 
+                commonImageData.data[i * 4 + 0] = val; 
+                commonImageData.data[i * 4 + 1] = val;
+                commonImageData.data[i * 4 + 2] = val; 
+                commonImageData.data[i * 4 + 3] = 255;
+            }
+
+            // Draw on main reconstructedIntensityCanvas (for Band Selection)
+            reconstructedIntensityCanvas.width = img.width;
+            reconstructedIntensityCanvas.height = img.height; 
+            reconstructedIntensityCtx.putImageData(commonImageData, 0, 0);
+            
+            // Draw crosshairs and crop box on reconstructedIntensityCanvas
+            if (lastClickedPosition.x !== -1 && lastClickedPosition.y !== -1) {
+                reconstructedIntensityCtx.strokeStyle = 'red';
+                reconstructedIntensityCtx.lineWidth = 0.5;
+                reconstructedIntensityCtx.beginPath(); reconstructedIntensityCtx.moveTo(0, lastClickedPosition.y); reconstructedIntensityCtx.lineTo(img.width, lastClickedPosition.y); reconstructedIntensityCtx.stroke();
+                reconstructedIntensityCtx.beginPath(); reconstructedIntensityCtx.moveTo(lastClickedPosition.x, 0); reconstructedIntensityCtx.lineTo(lastClickedPosition.x, img.height); reconstructedIntensityCtx.stroke();
+                reconstructedIntensityCtx.strokeStyle = 'rgba(255, 0, 0, 0.7)'; reconstructedIntensityCtx.lineWidth = 1;
+                reconstructedIntensityCtx.strokeRect(
+                    Math.max(0, lastClickedPosition.x - CROP_SIZE / 2), 
+                    Math.max(0, lastClickedPosition.y - CROP_SIZE / 2),
+                    CROP_SIZE, CROP_SIZE
+                );
+            }
+            
+            // Draw on the new reconstructedPreviewCanvas (in Row 2)
+            if (reconstructedPreviewCanvas && reconstructedPreviewCtx) { // ADDED BLOCK
+                reconstructedPreviewCanvas.width = img.width;
+                reconstructedPreviewCanvas.height = img.height; 
+                reconstructedPreviewCtx.putImageData(commonImageData, 0, 0);
+            }
+        }
+
+        function updateExposureDisplays() {
+            if (!processedImagesData || processedImagesData.length === 0 || !processedImagesData[currentImageIndex]) {
+                exposureInfo.textContent = `Exposure Index: -`;
+                currentFileName.textContent = "No file selected";
+                imageExposureInfo.textContent = `Exposure Time: N/A`;
+                return;
+            }
+            const img = processedImagesData[currentImageIndex];
+            const timeVal = (exposureTimes[currentImageIndex] !== undefined && typeof exposureTimes[currentImageIndex] === 'number') 
+                ? exposureTimes[currentImageIndex].toFixed(1) + "s" 
+                : "N/A";
+            
+            exposureInfo.textContent = `Exposure Index: ${parseInt(exposureSlider.value) + 1} of ${processedImagesData.length} (Time: ${timeVal})`;
+            currentFileName.textContent = img.name;
+            imageExposureInfo.textContent = `Exposure Time: ${timeVal}`;
+        }
+
+        function handleSliderChange() {
+            currentImageIndex = parseInt(exposureSlider.value);
+            console.log(`handleSliderChange: New index: ${currentImageIndex}`);
+            if (processedImagesData && processedImagesData[currentImageIndex] && processedImagesData[currentImageIndex].data) {
+                console.log(`Sample data for image ${currentImageIndex}:`, processedImagesData[currentImageIndex].data.slice(0, 5));
+            } else {
+                console.log(`No data found for image ${currentImageIndex}`);
+            }
+
+            displayTimeSeriesImage(); 
+            
+            if (noiseChart && meanNoiseValuesArray.length > 0 && meanNoiseValuesArray.length > currentImageIndex) { 
+                const newDataset = {
+                    ...noiseChart.data.datasets[0],
+                    pointBackgroundColor: meanNoiseValuesArray.map((_, i) =>  // Use meanNoiseValuesArray
+                        i === currentImageIndex ? 'rgba(255, 99, 132, 1)' : 'rgba(54, 162, 235, 1)'
+                    ),
+                    pointRadius: meanNoiseValuesArray.map((_, i) => // Use meanNoiseValuesArray
+                        i === currentImageIndex ? 7 : 5
+                    )
+                };
+                noiseChart.data.datasets[0] = newDataset;
+                noiseChart.update();
+            }
+        }
+
+        function handleReconstructedCanvasClick(event) { // New function to handle clicks on reconstructed canvas
+            if (!reconstructedIntensityData || !reconstructedIntensityData.data) return;
+
+            const rect = reconstructedIntensityCanvas.getBoundingClientRect();
+            const scaleX = reconstructedIntensityCanvas.width / rect.width;
+            const scaleY = reconstructedIntensityCanvas.height / rect.height;
+            lastClickedPosition.x = Math.floor((event.clientX - rect.left) * scaleX);
+            lastClickedPosition.y = Math.floor((event.clientY - rect.top) * scaleY);
+            
+            lastClickedPosition.x = Math.max(0, Math.min(reconstructedIntensityData.width -1 , lastClickedPosition.x));
+            lastClickedPosition.y = Math.max(0, Math.min(reconstructedIntensityData.height -1, lastClickedPosition.y));
+
+            reconstructedClickedPosDisplay.textContent = `(x: ${lastClickedPosition.x}, y: ${lastClickedPosition.y})`;
+
+            // ADDED: Reset horizontal and vertical sliders and their states
+            horizontalIndex = 32;
+            verticalIndex = 32;
+            if (horizontalSlider) horizontalSlider.value = horizontalIndex;
+            if (verticalSlider) verticalSlider.value = verticalIndex;
+            if (horizontalValue) horizontalValue.textContent = horizontalIndex;
+            if (verticalValue) verticalValue.textContent = verticalIndex;
+            // END ADDED
+
+            drawBandSelectionDisplayImage(); // Redraw with new crosshair (was displayReconstructedIntensityImage)
+            updateAllCropsAndModel(); // Update ONNX analysis
+        }
+        
+        function adjustReconstructedPosition(dx, dy) { // New function for fine-tuning on reconstructed canvas
+            if (!reconstructedIntensityData || !reconstructedIntensityData.data) return;
+
+            if (lastClickedPosition.x === -1 || lastClickedPosition.y === -1) { 
+                lastClickedPosition.x = Math.floor(reconstructedIntensityData.width / 2);
+                lastClickedPosition.y = Math.floor(reconstructedIntensityData.height / 2);
+            }
+            lastClickedPosition.x = Math.max(0, Math.min(reconstructedIntensityData.width - 1, lastClickedPosition.x + dx));
+            lastClickedPosition.y = Math.max(0, Math.min(reconstructedIntensityData.height - 1, lastClickedPosition.y + dy));
+            
+            reconstructedClickedPosDisplay.textContent = `(x: ${lastClickedPosition.x}, y: ${lastClickedPosition.y})`;
+
+            // ADDED: Reset horizontal and vertical sliders and their states
+            horizontalIndex = 32;
+            verticalIndex = 32;
+            if (horizontalSlider) horizontalSlider.value = horizontalIndex;
+            if (verticalSlider) verticalSlider.value = verticalIndex;
+            if (horizontalValue) horizontalValue.textContent = horizontalIndex;
+            if (verticalValue) verticalValue.textContent = verticalIndex;
+            // END ADDED
+            
+            drawBandSelectionDisplayImage(); // Redraw with new crosshair (was displayReconstructedIntensityImage)
+            updateAllCropsAndModel(); // Update ONNX analysis
+        }
+
+        function handleKeyDown(event) {
+            // This should ideally check which canvas/context is active if both were interactive
+            // For now, assuming it's for the reconstructed image fine-tuning
+            switch(event.key) {
+                case 'ArrowUp': adjustReconstructedPosition(0, -1); event.preventDefault(); break;
+                case 'ArrowDown': adjustReconstructedPosition(0, 1); event.preventDefault(); break;
+                case 'ArrowLeft': adjustReconstructedPosition(-1, 0); event.preventDefault(); break;
+                case 'ArrowRight': adjustReconstructedPosition(1, 0); event.preventDefault(); break;
+            }
+        }
+
+        function extractCrop(sourceImageData, centerX, centerY, cropSize) {
+            // sourceImageData is expected to be {width, height, data}
+            // where data is 1D Float32Array, normalized (0=low intensity, 1=high intensity)
+            const inputData = new Float32Array(cropSize * cropSize);
+            inputData.fill(0.0); // Fill with 0 for areas outside the source image
+
+            const halfCrop = Math.floor(cropSize / 2);
+            
+            for (let y = 0; y < cropSize; y++) {
+                for (let x = 0; x < cropSize; x++) {
+                    const sourceX = centerX - halfCrop + x;
+                    const sourceY = centerY - halfCrop + y;
+
+                    if (sourceX >= 0 && sourceX < sourceImageData.width && sourceY >= 0 && sourceY < sourceImageData.height) {
+                        // Data is already processed intensity, no background subtraction needed here.
+                        let pixelValue = sourceImageData.data[sourceY * sourceImageData.width + sourceX];
+                        // Values should already be 0-1 from reconstruction, but clipping is safe.
+                        pixelValue = Math.max(0.0, Math.min(1.0, pixelValue)); 
+                        inputData[y * cropSize + x] = pixelValue; 
+                    }
+                }
+            }
+            return inputData;
+        }
+
+        async function updateAllCropsAndModel() {
+            if (lastClickedPosition.x === -1 || !reconstructedIntensityData || !reconstructedIntensityData.data) {
+                if (cropSectionsCtx) cropSectionsCtx.clearRect(0, 0, cropSectionsCanvas.width, cropSectionsCanvas.height);
+                // outputCropSum.textContent = "N/A"; // REMOVED
+                inputCropData = null; outputCropData = null;
+                drawCropSections(); // Draw empty state
+                return;
+            }
+
+            // Extract crop from the reconstructed intensity image
+            inputCropData = extractCrop(reconstructedIntensityData, lastClickedPosition.x, lastClickedPosition.y, CROP_SIZE);
+
+            if (!onnxSession) {
+                drawCropSections();
+                // outputCropSum.textContent = "ONNX Model not loaded"; // REMOVED
+                outputCropData = null;
+                return;
+            }
+
+            try {
+                statusText.textContent = "Running model inference...";
+                const tensorInput = new ort.Tensor('float32', inputCropData, [1, 1, CROP_SIZE, CROP_SIZE]);
+                const feeds = { [onnxSession.inputNames[0]]: tensorInput };
+                const results = await onnxSession.run(feeds);
+                const outputTensor = results[onnxSession.outputNames[0]];
+                const rawOutputData = new Float32Array(outputTensor.data);
+
+                outputCropData = new Float32Array(rawOutputData.length);
+                let sum = 0; // Keep sum calculation for potential internal use or future re-instatement
+                for(let i=0; i < rawOutputData.length; i++) {
+                    outputCropData[i] = Math.max(0, rawOutputData[i]);
+                    sum += outputCropData[i];
+                }
+                
+                drawCropSections();
+                // outputCropSum.textContent = sum.toFixed(4); // REMOVED
+                statusText.textContent = "Model inference complete.";
+            } catch (error) {
+                console.error("Error during ONNX inference:", error);
+                statusText.textContent = `Error during ONNX inference: ${error.message}`;
+                if (cropSectionsCtx) cropSectionsCtx.clearRect(0, 0, cropSectionsCanvas.width, cropSectionsCanvas.height);
+                // outputCropSum.textContent = "Error"; // REMOVED
+                outputCropData = null;
+                drawCropSections();
+            }
+        }
+
+        function saveCurrentResult() {
+            // MODIFIED: Condition to check data availability directly
+            if (!inputCropData || !outputCropData || !reconstructedIntensityData) {
+                alert("Cannot save result. Ensure a crop is selected, analyzed on the reconstructed image, and the ONNX model has run successfully."); 
+                return;
+            }
+
+            let currentOutputSum = 0;
+            if (outputCropData) {
+                for (let k = 0; k < outputCropData.length; k++) {
+                    currentOutputSum += outputCropData[k];
+                }
+            }
+
+            const result = {
+                Membrane: opt1Select.value, Lane: opt2Select.value, Protein: opt3Select.value,
+                SourceContext: reconstructedIntensityData ? "ReconstructedIntensity" : "N/A", 
+                ClickedX: lastClickedPosition.x, ClickedY: lastClickedPosition.y,
+                OutputCropSum: parseFloat(currentOutputSum.toFixed(4)) // MODIFIED: Get sum from outputCropData
+            };
+            resultsDict.push(result);
+            updateResultsLog();
+            statusText.textContent = "Result saved to log.";
+        }
+
+        function updateResultsLog() {
+            if (resultsDict.length === 0) { resultsLog.textContent = "No results saved yet."; return; }
+            resultsLog.textContent = resultsDict.map(r => 
+                `M: ${r.Membrane}, L: ${r.Lane}, P: ${r.Protein}, Img: ${r.SourceContext}, Pos: (${r.ClickedX},${r.ClickedY}), Sum: ${r.OutputCropSum.toFixed(4)}`
+            ).join('\n');
+        }
+
+        function exportResultsToExcel() {
+            if (resultsDict.length === 0) {
+                alert("No results to export.");
+                return;
+            }
+
+            // 1. Create the header row for the pivot table
+            const headerRow = ["", ""].concat(OPTIONS_2);
+            const aoa = [headerRow]; // Array of Arrays for SheetJS
+
+            // 2. Iterate through Membranes (OPTIONS_1) and Proteins (OPTIONS_3) to build rows
+            OPTIONS_1.forEach(membrane => {
+                OPTIONS_3.forEach((protein, proteinIndex) => {
+                    const row = [];
+                    // Add Membrane name only for the first protein of that membrane
+                    row.push(proteinIndex === 0 ? membrane : "");
+                    row.push(protein);
+
+                    // 3. For each (Membrane, Protein) pair, iterate through Lanes (OPTIONS_2)
+                    OPTIONS_2.forEach(lane => {
+                        const resultEntry = resultsDict.find(r =>
+                            r.Membrane === membrane &&
+                            r.Protein === protein &&
+                            r.Lane === lane
+                        );
+
+                        if (resultEntry) {
+                            const sum = resultEntry.OutputCropSum;
+                            row.push(sum === 0.0 ? null : sum); // null for blank cell if sum is 0.0
+                        } else {
+                            row.push(null); // No result for this combination, so blank cell
+                        }
+                    });
+                    aoa.push(row);
+                });
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Results");
+
+            let filename = outputFileNameInput.value || "wb_results.xlsx";
+            if (!filename.toLowerCase().endsWith('.xlsx')) {
+                filename += ".xlsx";
+            }
+            
+            XLSX.writeFile(wb, filename);
+            statusText.textContent = `Results exported to ${filename}.`;
+        }
+        
+        function extractExposureTime(filename, fallbackIndex) {
+            const match = filename.match(/(\d+(?:\.\d+)?)/);
+            if (match) return parseFloat(match[1]);
+            return fallbackIndex;
+        }
+
+        function updateThresholdDisplay(threshold, backgroundPercentage = null) {
+            let displayText = threshold.toFixed(3);
+            if (backgroundPercentage !== null) {
+                displayText += `<br><span class='percentage-text'>(${backgroundPercentage}% background)</span>`;
+            }
+            thresholdValue.innerHTML = displayText;
+        }
+
+        function handleThresholdChange(event) {
+            // This function is effectively replaced by the direct logic in noiseThresholdSlider's event listener
+            // It can be removed or kept if there are other callers, but the primary slider logic is now inline.
+            // const newThreshold = parseFloat(event.target.value);
+            // updateThresholdDisplay(newThreshold);
+            // localStorage.setItem('backgroundThreshold', newThreshold.toString());
+            // debouncedHandleNoiseThresholdInteraction(); // This call is now directly in the event listener
+        }
+
+        function updateNoiseAnalysis(threshold) {
+            if (processedImagesData.length === 0) return;
+            
+            BACKGROUND_THRESHOLD = threshold;
+            updateThresholdDisplay(threshold);
+
+            const firstImage = processedImagesData[0];
+            backgroundMask = new Uint8Array(firstImage.width * firstImage.height);
+            noiseValues = new Array(processedImagesData.length).fill(0);
+            
+            let firstImageBackgroundPixelCount = 0;
+            for (let i = 0; i < firstImage.data.length; i++) {
+                if (firstImage.data[i] < threshold) {
+                    backgroundMask[i] = 1;
+                    firstImageBackgroundPixelCount++;
+                } else {
+                    backgroundMask[i] = 0;
+                }
+            }
+            const backgroundPercentage = (firstImageBackgroundPixelCount / backgroundMask.length * 100).toFixed(1);
+            updateThresholdDisplay(threshold, backgroundPercentage);
+
+            for (let imgIndex = 0; imgIndex < processedImagesData.length; imgIndex++) {
+                const img = processedImagesData[imgIndex];
+                let backgroundPixelsSum = 0;
+                let backgroundPixelCount = 0;
+                
+                if (img.width * img.height !== backgroundMask.length) {
+                    console.warn(`Image ${img.name} dimensions do not match background mask. Skipping noise calculation for this image.`);
+                    noiseValues[imgIndex] = 0;
+                    continue;
+                }
+
+                for (let i = 0; i < img.data.length; i++) {
+                    if (backgroundMask[i] === 1) {
+                        backgroundPixelsSum += img.data[i];
+                        backgroundPixelCount++;
+                    }
+                }
+                
+                if (backgroundPixelCount > 0) {
+                    noiseValues[imgIndex] = backgroundPixelsSum / backgroundPixelCount;
+                } else {
+                    noiseValues[imgIndex] = 0;
+                }
+            }
+            
+            if (noiseValues.length > currentImageIndex) {
+                backgroundMean = noiseValues[currentImageIndex];
+            } else {
+                backgroundMean = 0;
+            }
+            console.log(`Background mean for current image ${currentImageIndex} set to ${backgroundMean.toFixed(4)} after noise analysis.`);
+
+            drawBackgroundMaskVisualization();
+            updateNoiseChart();
+        }
+        
+        function drawBackgroundMaskVisualization() {
+            if (!processedImagesData[currentImageIndex] || !backgroundMask) {
+                 if(backgroundMaskCtx) backgroundMaskCtx.clearRect(0,0, backgroundMaskCanvas.width, backgroundMaskCanvas.height);
+                return;
+            }
+            
+            const currentImg = processedImagesData[currentImageIndex];
+            const originalWidth = currentImg.width;
+            const originalHeight = currentImg.height;
+
+            const container = backgroundMaskCanvas.parentElement;
+            const displayWidth = container.clientWidth;
+            const displayHeight = container.clientHeight;
+
+            const scale = Math.min(displayWidth / originalWidth, displayHeight / originalHeight, 3);
+            const canvasWidth = Math.floor(originalWidth * scale);
+            const canvasHeight = Math.floor(originalHeight * scale);
+
+            backgroundMaskCanvas.width = canvasWidth;
+            backgroundMaskCanvas.height = canvasHeight;
+            
+            const maskImageData = backgroundMaskCtx.createImageData(canvasWidth, canvasHeight);
+            
+            const setScaledPixel = (imgX, imgY, r, g, b, a) => {
+                const startX = Math.floor(imgX * scale);
+                const startY = Math.floor(imgY * scale);
+                const endX = Math.floor((imgX + 1) * scale);
+                const endY = Math.floor((imgY + 1) * scale);
+                
+                for (let sy = startY; sy < endY; sy++) {
+                    for (let sx = startX; sx < endX; sx++) {
+                        if (sx >= 0 && sx < canvasWidth && sy >= 0 && sy < canvasHeight) {
+                            const index = (sy * canvasWidth + sx) * 4;
+                            maskImageData.data[index] = r;
+                            maskImageData.data[index + 1] = g;
+                            maskImageData.data[index + 2] = b;
+                            maskImageData.data[index + 3] = a;
+                        }
+                    }
+                }
+            };
+            
+            for (let y = 0; y < originalHeight; y++) {
+                for (let x = 0; x < originalWidth; x++) {
+                    const i = y * originalWidth + x;
+                    let val = Math.floor((1 - currentImg.data[i]) * 255);
+                    
+                    if (backgroundMask[i] === 1) {
+                        setScaledPixel(x, y, 60, 60, 60, 255);
+                    } else {
+                        setScaledPixel(x, y, val, val, val, 255);
+                    }
+                }
+            }
+            backgroundMaskCtx.putImageData(maskImageData, 0, 0);
+        }
+
+        function updateNoiseChart() {
+            if (noiseChart) noiseChart.destroy();
+            
+            // Ensure exposureTimes and meanNoiseValuesArray are valid and have the same length
+            if (!exposureTimes || !meanNoiseValuesArray || exposureTimes.length !== meanNoiseValuesArray.length || exposureTimes.length === 0) {
+                console.warn("Exposure times and meanNoiseValuesArray not ready for chart or mismatched lengths.");
+                const chartCtx = noiseChartCanvas.getContext('2d');
+                if(chartCtx) chartCtx.clearRect(0,0,noiseChartCanvas.width, noiseChartCanvas.height); // Clear canvas if data is bad
+                return;
+            }
+
+            const ctx = noiseChartCanvas.getContext('2d');
+            noiseChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: exposureTimes.map(String), // exposureTimes should include the initial 0
+                    datasets: [{
+                        label: 'Mean Noise in Masked Area',
+                        data: meanNoiseValuesArray, // meanNoiseValuesArray should correspond to processedImagesData (including zero image)
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2, fill: false,
+                        pointBackgroundColor: meanNoiseValuesArray.map((_, i) => 
+                            i === currentImageIndex ? 'rgba(255, 99, 132, 1)' : 'rgba(54, 162, 235, 1)'
+                        ),
+                        pointRadius: meanNoiseValuesArray.map((_, i) => 
+                            i === currentImageIndex ? 7 : 5
+                        ),
+                        lineTension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: 'Exposure Time (s) or Image Index' } },
+                        y: { title: { display: true, text: 'Mean Noise Value' }, min: 0, suggestedMax: 0.05 }
+                    }
+                }
+            });
+        }
+
+        function handleHorizontalSliderChange(event) {
+            horizontalIndex = parseInt(event.target.value);
+            horizontalValue.textContent = horizontalIndex;
+            // if(inputCropData) drawCropSections(); // Now called by debouncedDrawCropSections
+        }
+
+        function handleVerticalSliderChange(event) {
+            verticalIndex = parseInt(event.target.value);
+            verticalValue.textContent = verticalIndex;
+            // if(inputCropData) drawCropSections(); // Now called by debouncedDrawCropSections
+        }
+
+        function drawCropSections() {
+            const canvas = cropSectionsCanvas;
+            const ctx = cropSectionsCtx;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (!inputCropData && !outputCropData) { // Check original global data for initial empty state
+                ctx.font = "16px Arial";
+                ctx.fillStyle = "#777";
+                ctx.textAlign = "center";
+                ctx.fillText("No crop data available.", canvas.width/2, canvas.height/2);
+                return;
+            }
+
+            let inputDisplayData = null;
+            let outputDisplayData = null;
+
+            if (inputCropData) {
+                const inputCentralMax = getCentralPatchMax(inputCropData);
+                inputDisplayData = normalizeDataByMax(inputCropData, inputCentralMax);
+            }
+
+            if (outputCropData) {
+                const outputCentralMax = getCentralPatchMax(outputCropData);
+                outputDisplayData = normalizeDataByMax(outputCropData, outputCentralMax);
+            }
+
+            const canvasSize = canvas.width;
+            const halfSize = canvasSize / 2;
+            const titlePadding = 25;
+            const plotSize = halfSize; // plotSize used for width/height of plot areas
+
+            ctx.fillStyle = '#f8f8f8';
+            ctx.fillRect(0, 0, canvasSize, canvasSize);
+            
+            ctx.fillStyle = '#333'; ctx.font = 'bold 13px Arial'; ctx.textAlign = 'center';
+            
+            ctx.fillText('Input Crop', plotSize/2, titlePadding * 0.7);
+            ctx.fillText('Vertical Section', halfSize + plotSize/2, titlePadding * 0.7);
+            ctx.fillText('Horizontal Section', plotSize/2, halfSize + titlePadding * 0.7);
+            ctx.fillText('Output Crop', halfSize + plotSize/2, halfSize + titlePadding * 0.7);
+            
+            ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(halfSize, 0); ctx.lineTo(halfSize, canvasSize); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, halfSize); ctx.lineTo(canvasSize, halfSize); ctx.stroke();
+            
+            const displayMaxValue = 1.0; // Since data is now locally normalized to 0-1 range
+
+            const plotAreaStartY = titlePadding;
+            const plotAreaHeight = halfSize - titlePadding;
+            const plotAreaWidth = halfSize; // This is the width available for each of the 4 squares
+
+            if(inputDisplayData) drawImageToGrid(ctx, 0, plotAreaStartY, plotAreaWidth, plotAreaHeight, inputDisplayData, displayMaxValue);
+            if(outputDisplayData) drawImageToGrid(ctx, halfSize, halfSize + plotAreaStartY, plotAreaWidth, plotAreaHeight, outputDisplayData, displayMaxValue);
+            
+            // Pass display-normalized data to section drawing functions
+            drawVerticalSection(ctx, halfSize, plotAreaStartY, plotAreaWidth, plotAreaHeight, displayMaxValue, inputDisplayData, outputDisplayData); 
+            drawHorizontalSection(ctx, 0, halfSize + plotAreaStartY, plotAreaWidth, plotAreaHeight, displayMaxValue, inputDisplayData, outputDisplayData); 
+            
+            ctx.strokeStyle = 'rgba(255,0,0,0.7)'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+            
+            if (inputDisplayData) { // Draw lines on Input Crop quadrant
+                const inputPlotXStart = 0;
+                const inputPlotYStart = plotAreaStartY;
+                const inputPlotW = plotAreaWidth;
+                const inputPlotH = plotAreaHeight;
+
+                let linePosX_input = inputPlotXStart + (verticalIndex / (CROP_SIZE-1)) * inputPlotW;
+                ctx.beginPath(); ctx.moveTo(linePosX_input, inputPlotYStart); ctx.lineTo(linePosX_input, inputPlotYStart + inputPlotH); ctx.stroke();
+                
+                let linePosY_input = inputPlotYStart + (horizontalIndex / (CROP_SIZE-1)) * inputPlotH;
+                ctx.beginPath(); ctx.moveTo(inputPlotXStart, linePosY_input); ctx.lineTo(inputPlotXStart + inputPlotW, linePosY_input); ctx.stroke();
+            }
+            if (outputDisplayData) { // Draw lines on Output Crop quadrant
+                const outputPlotXStart = halfSize;
+                const outputPlotYStart = halfSize + plotAreaStartY;
+                const outputPlotW = plotAreaWidth;
+                const outputPlotH = plotAreaHeight;
+
+                let linePosX_output = outputPlotXStart + (verticalIndex / (CROP_SIZE-1)) * outputPlotW;
+                ctx.beginPath(); ctx.moveTo(linePosX_output, outputPlotYStart); ctx.lineTo(linePosX_output, outputPlotYStart + outputPlotH); ctx.stroke();
+
+                let linePosY_output = outputPlotYStart + (horizontalIndex / (CROP_SIZE-1)) * outputPlotH;
+                ctx.beginPath(); ctx.moveTo(outputPlotXStart, linePosY_output); ctx.lineTo(outputPlotXStart + outputPlotW, linePosY_output); ctx.stroke();
+            }
+            ctx.setLineDash([]);
+        }
+        
+        function drawImageToGrid(ctx, startX, startY, width, height, imageData, maxValue) {
+            // This function remains the same, as maxValue will now be 1.0 for normalized data
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = CROP_SIZE; tempCanvas.height = CROP_SIZE;
+            const tempCtx = tempCanvas.getContext('2d');
+            const imgData = tempCtx.createImageData(CROP_SIZE, CROP_SIZE);
+            for (let i = 0; i < imageData.length; i++) {
+                const val = Math.floor((1 - (imageData[i] / maxValue)) * 255);
+                imgData.data[i * 4 + 0] = val; imgData.data[i * 4 + 1] = val;
+                imgData.data[i * 4 + 2] = val; imgData.data[i * 4 + 3] = 255;
+            }
+            tempCtx.putImageData(imgData, 0, 0);
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(tempCanvas, startX, startY, width, height);
+        }
+        
+        function drawVerticalSection(ctx, startX, startY, width, height, maxValue, inputProfileData, outputProfileData) { // Added inputProfileData, outputProfileData
+            ctx.fillStyle = '#f5f5f5'; ctx.fillRect(startX, startY, width, height);
+            ctx.strokeStyle = '#ddd'; ctx.lineWidth = 1; ctx.strokeRect(startX, startY, width, height);
+            
+            let inputVertical = null;
+            if (inputProfileData) {
+                inputVertical = getVerticalSection(inputProfileData, verticalIndex);
+            }
+            
+            let outputVertical = null;
+            if (outputProfileData) {
+                outputVertical = getVerticalSection(outputProfileData, verticalIndex);
+            }
+            
+            const plotPath = (data, color) => {
+                if (!data) return;
+                ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.beginPath();
+                for (let i = 0; i < CROP_SIZE; i++) {
+                    const valNorm = data[i] / maxValue; // maxValue is 1.0, so data[i] is used directly if already 0-1
+                    const x = startX + valNorm * width; 
+                    const y = startY + (i / (CROP_SIZE-1)) * height;
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            };
+
+            if(inputVertical) plotPath(inputVertical, 'blue');
+            if(outputVertical) plotPath(outputVertical, 'orange');
+            
+            const legendItems = outputVertical ? ['Input', 'Output'] : (inputVertical ? ['Input'] : []);
+            if (legendItems.length > 0) {
+                drawLegend(ctx, startX + width - 60, startY + 5, legendItems);
+            }
+        }
+        
+        function drawHorizontalSection(ctx, startX, startY, width, height, maxValue, inputProfileData, outputProfileData) { // Added inputProfileData, outputProfileData
+            ctx.fillStyle = '#f5f5f5'; ctx.fillRect(startX, startY, width, height);
+            ctx.strokeStyle = '#ddd'; ctx.lineWidth = 1; ctx.strokeRect(startX, startY, width, height);
+
+            let inputHorizontal = null;
+            if (inputProfileData) {
+                inputHorizontal = getHorizontalSection(inputProfileData, horizontalIndex);
+            }
+            let outputHorizontal = null;
+            if (outputProfileData) {
+                outputHorizontal = getHorizontalSection(outputProfileData, horizontalIndex);
+            }
+
+            const plotPath = (data, color) => {
+                if (!data) return;
+                ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.beginPath();
+                for (let i = 0; i < CROP_SIZE; i++) {
+                    const valNorm = data[i] / maxValue; // maxValue is 1.0
+                    const x = startX + (i / (CROP_SIZE-1)) * width;
+                    const y = startY + height - (valNorm * height); 
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            };
+
+            if(inputHorizontal) plotPath(inputHorizontal, 'blue');
+            if(outputHorizontal) plotPath(outputHorizontal, 'orange');
+            
+            const legendItems = outputHorizontal ? ['Input', 'Output'] : (inputHorizontal ? ['Input'] : []);
+            if (legendItems.length > 0) {
+                drawLegend(ctx, startX + width - 60, startY + 5, legendItems);
+            }
+        }
+
+        function drawLegend(ctx, x, y, items) {
+            ctx.font = '10px Arial'; ctx.textAlign = 'left'; // Keep text align left, adjust x for right positioning
+            const itemHeight = 15;
+            const rectSize = 8;
+            const textOffsetX = 12;
+            const legendItemWidth = 50; // Approximate width for "Output" + padding
+
+            items.forEach((item, index) => {
+                let fillColor = '#333'; // Default
+                if (item === 'Input') fillColor = 'blue';
+                else if (item === 'Output') fillColor = 'orange';
+
+                // x is already adjusted to be the start of the legend box from the right
+                ctx.fillStyle = fillColor;
+                ctx.fillRect(x, y + index * itemHeight, rectSize, rectSize);
+                
+                ctx.fillStyle = '#333'; // Text color
+                ctx.fillText(item, x + textOffsetX, y + index * itemHeight + rectSize);
+            });
+        }
+        
+        function getHorizontalSection(data, row) {
+            const result = new Float32Array(CROP_SIZE);
+            for (let i = 0; i < CROP_SIZE; i++) result[i] = data[row * CROP_SIZE + i];
+            return result;
+        }
+        
+        function getVerticalSection(data, col) {
+            const result = new Float32Array(CROP_SIZE);
+            for (let i = 0; i < CROP_SIZE; i++) result[i] = data[i * CROP_SIZE + col];
+            return result;
+        }
+        
+        // Function to handle live updates from the noise threshold slider
+        function handleNoiseThresholdInteraction() {
+            const newThreshold = parseFloat(noiseThresholdSlider.value);
+            BACKGROUND_THRESHOLD = newThreshold;
+            // statusText.textContent = "Recalculating noise & mask for new threshold..."; // Optional: for user feedback
+
+            const { means, mask, stats } = calculateMeanNoiseAndMask(processedImagesData, BACKGROUND_THRESHOLD);
+            meanNoiseValuesArray = means; 
+            backgroundMask = mask;
+
+            updateThresholdDisplay(BACKGROUND_THRESHOLD, stats.backgroundPercentage);
+            updateNoiseChart();
+            drawBackgroundMaskVisualization();
+            
+            // statusText.textContent = "Noise & mask updated."; // Optional
+        }
+
+        function handleBandSelectionDisplaySliderChange(event) {
+            currentBandSelectionDisplayIndex = parseInt(bandSelectionDisplaySlider.value);
+            drawBandSelectionDisplayImage(); // Redraw the main display with the selected time-series image
+            updateBandSelectionDisplayInfo();
+        }
+
+        function updateBandSelectionDisplayInfo() {
+            if (!processedImagesData || processedImagesData.length === 0 || !exposureTimes || exposureTimes.length <= currentBandSelectionDisplayIndex) {
+                bandSelectionDisplayInfo.textContent = "Display Exposure: N/A";
+                return;
+            }
+            const img = processedImagesData[currentBandSelectionDisplayIndex];
+            const timeVal = (exposureTimes[currentBandSelectionDisplayIndex] !== undefined && typeof exposureTimes[currentBandSelectionDisplayIndex] === 'number') 
+                ? exposureTimes[currentBandSelectionDisplayIndex].toFixed(1) + "s"
+                : "N/A";
+            bandSelectionDisplayInfo.innerHTML = `Display Exposure: ${currentBandSelectionDisplayIndex + 1} of ${processedImagesData.length} (Time: ${timeVal})`; // Use innerHTML if it contains <br>
+        }
+
+        function drawBandSelectionDisplayImage() {
+            if (!processedImagesData || processedImagesData.length === 0 || currentBandSelectionDisplayIndex < 0 || currentBandSelectionDisplayIndex >= processedImagesData.length) {
+                if (reconstructedIntensityCtx) reconstructedIntensityCtx.clearRect(0, 0, reconstructedIntensityCanvas.width, reconstructedIntensityCanvas.height);
+                return;
+            }
+
+            const imgToDisplay = processedImagesData[currentBandSelectionDisplayIndex];
+            reconstructedIntensityCanvas.width = imgToDisplay.width;
+            reconstructedIntensityCanvas.height = imgToDisplay.height;
+            
+            const imageData = reconstructedIntensityCtx.createImageData(imgToDisplay.width, imgToDisplay.height);
+            for (let i = 0; i < imgToDisplay.data.length; i++) {
+                const val = Math.floor((1.0 - imgToDisplay.data[i]) * 255); // Invert for display (0=black)
+                imageData.data[i * 4 + 0] = val; imageData.data[i * 4 + 1] = val;
+                imageData.data[i * 4 + 2] = val; imageData.data[i * 4 + 3] = 255;
+            }
+            reconstructedIntensityCtx.putImageData(imageData, 0, 0);
+            
+            // Draw crosshairs and crop box (these use lastClickedPosition which is independent of displayed image index)
+            if (lastClickedPosition.x !== -1 && lastClickedPosition.y !== -1) {
+                reconstructedIntensityCtx.strokeStyle = 'red';
+                reconstructedIntensityCtx.lineWidth = 0.5;
+                reconstructedIntensityCtx.beginPath(); reconstructedIntensityCtx.moveTo(0, lastClickedPosition.y); reconstructedIntensityCtx.lineTo(imgToDisplay.width, lastClickedPosition.y); reconstructedIntensityCtx.stroke();
+                reconstructedIntensityCtx.beginPath(); reconstructedIntensityCtx.moveTo(lastClickedPosition.x, 0); reconstructedIntensityCtx.lineTo(lastClickedPosition.x, imgToDisplay.height); reconstructedIntensityCtx.stroke();
+                reconstructedIntensityCtx.strokeStyle = 'rgba(255, 0, 0, 0.7)'; reconstructedIntensityCtx.lineWidth = 1;
+                reconstructedIntensityCtx.strokeRect(
+                    Math.max(0, lastClickedPosition.x - CROP_SIZE / 2), 
+                    Math.max(0, lastClickedPosition.y - CROP_SIZE / 2),
+                    CROP_SIZE, CROP_SIZE
+                );
+            }
+        }
+
+        function drawReconstructedPreviewImage() {
+            if (!reconstructedIntensityData || !reconstructedIntensityData.data) {
+                if (reconstructedPreviewCtx) reconstructedPreviewCtx.clearRect(0, 0, reconstructedPreviewCanvas.width, reconstructedPreviewCanvas.height);
+                return;
+            }
+            if (!reconstructedPreviewCanvas || !reconstructedPreviewCtx) return; // Ensure canvas and context are ready
+
+            const img = reconstructedIntensityData; // Always use the single reconstructed image here
+            reconstructedPreviewCanvas.width = img.width;
+            reconstructedPreviewCanvas.height = img.height; 
+
+            const imageData = reconstructedPreviewCtx.createImageData(img.width, img.height);
+            for (let i = 0; i < img.data.length; i++) {
+                const val = Math.floor((1.0 - img.data[i]) * 255); 
+                imageData.data[i * 4 + 0] = val; imageData.data[i * 4 + 1] = val;
+                imageData.data[i * 4 + 2] = val; imageData.data[i * 4 + 3] = 255;
+            }
+            reconstructedPreviewCtx.putImageData(imageData, 0, 0);
+        }
+
+        initialize();
+    </script>
+</body>
+</html>
