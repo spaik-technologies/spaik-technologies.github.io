@@ -158,7 +158,11 @@ All JavaScript and CSS are inlined or linked via CDN.
                         <label for="opt1Select" class="block text-sm font-medium text-gray-700 mb-1">Membrane:</label> <select id="opt1Select" class="w-full p-2 mb-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
                         <label for="opt2Select" class="block text-sm font-medium text-gray-700 mb-1">Lane:</label> <select id="opt2Select" class="w-full p-2 mb-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
                         <label for="opt3Select" class="block text-sm font-medium text-gray-700 mb-1">Protein:</label> <select id="opt3Select" class="w-full p-2 mb-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"></select>
-                            <button id="saveCurrentCropSumButton" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:shadow-md transition duration-150 ease-in-out mt-auto">Save Current Value</button>
+                        <button id="saveCurrentCropSumButton" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:shadow-md transition duration-150 ease-in-out">Save Current Value</button>
+                     <div id="resultsLogContainer" class="mt-4 flex flex-col flex-1"> <!-- MOVED HERE -->
+                        <h3 class="text-md font-semibold text-gray-800 mb-1">Saved Results Log:</h3>
+                        <div id="resultsLog" class="p-2 bg-gray-50 border border-gray-200 rounded-md max-h-32 overflow-y-auto text-xs font-mono whitespace-pre-wrap flex-1">No results saved yet.</div>
+                     </div>
                     </div>
                 </div>
                 <!-- Right part of New Row 1 (for BandSelAnalysisGroup) -->
@@ -211,10 +215,7 @@ All JavaScript and CSS are inlined or linked via CDN.
                         <label for="outputFileName" class="block text-sm font-medium text-gray-700 mb-1">File Name:</label>
                         <input type="text" id="outputFileName" value="wb_results.xlsx" class="w-full p-2 mb-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
                         <button id="exportToExcelButton" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:shadow-md transition duration-150 ease-in-out">Export to Excel</button>
-                         <div id="resultsLogContainer" class="mt-4 flex flex-col flex-1"> <!-- Added flex flex-col flex-1 -->
-                            <h3 class="text-md font-semibold text-gray-800 mb-1">Saved Results Log:</h3>
-                            <div id="resultsLog" class="p-2 bg-gray-50 border border-gray-200 rounded-md max-h-32 overflow-y-auto text-xs font-mono whitespace-pre-wrap flex-1">No results saved yet.</div> <!-- Added flex-1 -->
-                         </div>
+                         <!-- MOVED FROM HERE -->
                     </div>
                 </div>
                 <!-- Right part of New Row 2 (for Saved Values Grid) -->
