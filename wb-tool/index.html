@@ -1058,16 +1058,41 @@ All JavaScript and CSS are inlined or linked via CDN.
             }
             let currentOutputSum = 0;
             if (outputCropData) { for (let k = 0; k < outputCropData.length; k++) currentOutputSum += outputCropData[k]; }
-            const result = {
-                Membrane: opt1Select.value, Lane: opt2Select.value, Protein: opt3Select.value,
+            
+            const membraneValue = opt1Select.value;
+            const laneValue = opt2Select.value;
+            const proteinValue = opt3Select.value;
+
+            const newResult = {
+                Membrane: membraneValue,
+                Lane: laneValue,
+                Protein: proteinValue,
                 SourceContext: "ReconstructedIntensity", 
-                ClickedX: lastClickedPosition.x, ClickedY: lastClickedPosition.y,
+                ClickedX: lastClickedPosition.x,
+                ClickedY: lastClickedPosition.y,
                 OutputCropSum: parseFloat(currentOutputSum.toFixed(4)) 
             };
-            resultsDict.push(result);
+
+            const existingResultIndex = resultsDict.findIndex(r => 
+                r.Membrane === membraneValue && 
+                r.Lane === laneValue && 
+                r.Protein === proteinValue
+            );
+
+            if (existingResultIndex !== -1) {
+                // Update existing result
+                resultsDict[existingResultIndex].OutputCropSum = newResult.OutputCropSum;
+                resultsDict[existingResultIndex].ClickedX = newResult.ClickedX;
+                resultsDict[existingResultIndex].ClickedY = newResult.ClickedY;
+                statusText.textContent = "Result updated in log and grid.";
+            } else {
+                // Add new result
+                resultsDict.push(newResult);
+                statusText.textContent = "Result saved to log and grid.";
+            }
+            
             updateResultsLog();
             updateSavedValuesTable(); 
-            statusText.textContent = "Result saved to log and grid.";
         }
 
         function updateResultsLog() {
